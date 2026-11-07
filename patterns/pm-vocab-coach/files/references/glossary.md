@@ -133,7 +133,7 @@ swimlane); gap analysis; benefits realisation; scope models; interface analysis.
 ## §4 Calibrated examples (exact shape, ≤50 words)
 
 **Do NOT correct** — house term:
-> "The ingest project's soak ends next week." → silence. (`soak` is in §1; the mapping is already known.)
+> "The ingest project's bake ends next week." → silence. (`bake` is in §1; the mapping is already known.)
 
 **Correct** — milestone for a work package:
 > 📘 PM term: you said **milestone** → PMI says **work package**. Work packages are the lowest Work Breakdown Structure (WBS) level and carry effort; "add the search page" takes days. A milestone is a zero-duration significant point — the page is live. [D2 · Predictive]

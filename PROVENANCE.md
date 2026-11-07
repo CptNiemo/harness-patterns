@@ -1,6 +1,6 @@
 # PROVENANCE
 
-Export #4 · 2026-11 · produced by an allowlist-driven, gated export from a private repository.
+Export #5 · 2026-11 · produced by an allowlist-driven, gated export from a private repository.
 No private history exists here: every file is a reviewed copy; this repository's own history is the only history.
 
 ## Gates at build (0 = passed)
@@ -46,7 +46,7 @@ No private history exists here: every file is a reviewed copy; this repository's
 - `patterns/lessons-register/pattern.json` `c7cf83b3f36a59e71917f7738b8f78365f3a7f152a7f3772b54ff013c2a37f22`
 - `patterns/pm-vocab-coach/README.md` `58e4e9dc529deb44a2f594bb7c797fd3d75cdcd5b318ca4087e337601c44bd5f`
 - `patterns/pm-vocab-coach/files/SKILL.md` `31a14c7b1c03c63c9cc0d94ee740a9bacfe7c94aadc4856b733908e478031077`
-- `patterns/pm-vocab-coach/files/references/glossary.md` `c80a7dc2325480d2c6b80e389ecb43a4eb59740d6090f43cfb6927a69ffbaf2e`
+- `patterns/pm-vocab-coach/files/references/glossary.md` `2a8e7b699b9ef6abb155a8b2ef5795204244e88e3f01a78292126cbf8441de2f`
 - `patterns/pm-vocab-coach/pattern.json` `170591ac1d8cc92f3b65cc2fd7a8d2af5c6069e5741040c718585e05645dbce6`
 - `patterns/record-lint/README.md` `36a07f213ba8b412b7c15b60e3d2f6fb7444129b46a76cd0d7f9bcff7c0f9798`
 - `patterns/record-lint/files/record-check.py` `54e42fa80c86ef9d74de086b687c49bdc8942eeffd322fbe2fb5610c32525171`
@@ -58,7 +58,7 @@ No private history exists here: every file is a reviewed copy; this repository's
 - `patterns/web-triage-cell/README.md` `307860042f8a7dc657fa04e56acba5da7e0974eaf83144d21a8be1e2e8f0f0c8`
 - `patterns/web-triage-cell/files/web-triage.md` `46196aa445ad53bedb15b4d49847ddfdbdae28b5f2dd9162a6b1caf5264b9ad8`
 - `patterns/web-triage-cell/pattern.json` `36898a4a0e1a5852c78a9536e7a53cb7ab12d7ce8570cadb6aa90eb335227104`
-- `tools/crossing-lint.sh` `8b8284009098030c1790068490cb1fd38680a6ebece3377fb56a677aee57f0dd`
-- `tools/gate-generic.rules` `eef771014f716f0bdd2aca79d57c60fa9aa2113839d6786cedf44d05a4726a0a`
+- `tools/crossing-lint.sh` `4a469adb94e1de99e57490aa5afca25ab9f8a831cf0f8cb3522b9e5cb8de22ab`
+- `tools/gate-generic.rules` `cf3de4b03feeaa63cdcc8ed463979f8b91dd5da41c97462638593f352f4cc346`
 - `tools/gitleaks.toml` `0b3a621cd209e470d35aacf5291052ed2fedb1abbf6f5435eead9ef8ca090e18`
 - `tools/preflight-public.sh` `69aae18eb15e4700341f7f2d7ea316d2b2daf51b267e4b7404a2772fb0f34aa0`

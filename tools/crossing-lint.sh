@@ -16,7 +16,7 @@
 #   --generic-only  skip list 2 (for trees that legitimately carry the literals, e.g. a private self-test)
 # Exit: 0 clean · 1 one or more hits · 2 configuration error (empty/insecure list, a rule that does not compile or
 #       matches the empty string, a normalisation or grep step that failed, an unreadable staged blob) · 4 the off-repo
-#       token list is missing (write it, or pass --generic-only) — every non-zero code fails closed. 2026-11-06 (S4 review).
+#       token list is missing (write it, or pass --generic-only) — every non-zero code fails closed.
 # Output: one line per hit  <file>:<line>:<list>: <content, truncated>  then a summary line.
 
 set -uo pipefail
@@ -69,7 +69,7 @@ load_list() { # $1 source file  $2 output file  $3 label
         n=$((n + 1))
     done < "$src"
     [ "$n" -ge 1 ] || cfg_die "$label list is empty: $src"
-    # ONE check over the whole list against an empty line (two greps per rule cost a Windows seat ~16 s per commit):
+    # ONE check over the whole list against an empty line (two greps per rule cost ~16 s per commit on a slow shell):
     # grep exits 1 = every rule compiles and none matches the empty string (the only good answer); 0 = some rule matches
     # the empty string and would flag every line of every file (a `host*` typo); 2 = a rule does not compile. Only then
     # walk the rules to name the bad one. Fail closed either way.
@@ -156,7 +156,7 @@ while IFS= read -r -d '' name && IFS= read -r -d '' path; do
     # glued the neighbours instead, so a label, a placeholder and a dot-suffix read as one hostname (found 2026-11-05)
     sed -E "s/($PLACEHOLDERS)/ /g" "$WORK/src" > "$WORK/a" || cfg_die "placeholder strip failed on $name"
     # copy B: NFKC-normalised, then ASCII-transliterated (homoglyph / full-width defence); -a = never skip as binary.
-    # Python runs in UTF-8 mode (-X utf8): without it the normalisation silently did nothing under Windows' locale.
+    # Python runs in UTF-8 mode (-X utf8): without it the normalisation silently did nothing under a non-UTF-8 locale.
     # A failed step is a configuration error (exit 2) — the old `|| cp` fallback switched this defence off in silence.
     if [ "$HAVE_PY" -eq 1 ]; then
         python3 -I -X utf8 -c 'import sys,unicodedata; sys.stdout.write(unicodedata.normalize("NFKC", sys.stdin.read()))' \
