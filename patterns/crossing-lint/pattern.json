@@ -1,0 +1,18 @@
+{
+  "id": "crossing-lint",
+  "name": "Crossing lint (two-list identity gate)",
+  "summary": "a grep gate that refuses any file crossing from a private tree into a public repo, another machine or a pasted prompt when it carries a private shape (addresses, magic-DNS names, internal hostnames) or an off-repo literal (device names, people, domains, project codes); fails CLOSED when its literal list is missing",
+  "status": "stable",
+  "version": "1.0.0",
+  "files": [
+    "tools/crossing-lint.sh",
+    "tools/gate-generic.rules"
+  ],
+  "requires": [
+    "bash ≥ 4",
+    "GNU grep (-E and -P)",
+    "GNU coreutils (stat -c)",
+    "python3 (for the NFKC/ASCII-normalised second pass)"
+  ],
+  "retires": "the hand read of every file before it crosses, and the remembered question 'did a hostname slip into that diff?'"
+}

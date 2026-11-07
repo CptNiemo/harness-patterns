@@ -1,0 +1,15 @@
+{
+  "id": "closeout-continuity",
+  "name": "Closeout → continuity loop (session ritual)",
+  "summary": "an end-of-session skill: sweep loose ends, spot-check live state, write the continuity block (what landed with commit hashes, corrections, loose ends, TOMORROW FIRST), touch the state snapshot, update the tracker, stamp every record with author/model/time from the live clock, commit scoped — so the NEXT session reconstructs today from the repository alone",
+  "status": "stable",
+  "version": "1.0.0",
+  "files": [
+    "patterns/closeout-continuity/files/SKILL.md"
+  ],
+  "requires": [
+    "a repo with a continuity folder, a state snapshot and (optionally) a tracker file",
+    "the record-lint pattern to enforce the stamps"
+  ],
+  "retires": "the 'where did we leave off' reconstruction at the start of every session, and the trust-wait on an unstamped handoff"
+}

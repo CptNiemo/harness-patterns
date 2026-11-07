@@ -1,0 +1,15 @@
+{
+  "id": "exfil-guard",
+  "name": "Exfil-guard (one-shot credential exfiltration tripwire)",
+  "summary": "a PreToolUse hook for the Bash tool that denies a single command combining a secret path with a network egress tool (the fetch tools, nc, /dev/tcp…) — the classic one-shot credential exfiltration shape the file-read deny floor does not cover; fails OPEN on parse errors and only ever ADDS a deny",
+  "status": "stable",
+  "version": "1.0.0",
+  "files": [
+    "patterns/exfil-guard/files/exfil-guard.py"
+  ],
+  "requires": [
+    "python3 ≥ 3.9",
+    "a Claude Code hooks block in settings.json"
+  ],
+  "retires": "reading every Bash command of an agent session for the read-then-send shape"
+}

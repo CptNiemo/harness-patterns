@@ -1,0 +1,156 @@
+[
+  {
+    "id": "assert-or-die-lint",
+    "name": "Assert-or-die lint for operational scripts",
+    "summary": "an on-touch pre-commit lint for backup, sync and probe scripts: a measured value must gate the exit code and ride the success signal — or must not be measured at all; flags sizes/counts that are only logged, WARN anywhere (comments included), heartbeats without an evidence payload, and bare `|| true` without a reason",
+    "status": "stable",
+    "version": "1.0.0",
+    "files": [
+      "patterns/assert-or-die-lint/files/lint-assert-or-die.sh"
+    ],
+    "requires": [
+      "bash",
+      "grep -E"
+    ],
+    "retires": "the code review that asks 'does this script's green actually mean anything?'"
+  },
+  {
+    "id": "closeout-continuity",
+    "name": "Closeout → continuity loop (session ritual)",
+    "summary": "an end-of-session skill: sweep loose ends, spot-check live state, write the continuity block (what landed with commit hashes, corrections, loose ends, TOMORROW FIRST), touch the state snapshot, update the tracker, stamp every record with author/model/time from the live clock, commit scoped — so the NEXT session reconstructs today from the repository alone",
+    "status": "stable",
+    "version": "1.0.0",
+    "files": [
+      "patterns/closeout-continuity/files/SKILL.md"
+    ],
+    "requires": [
+      "a repo with a continuity folder, a state snapshot and (optionally) a tracker file",
+      "the record-lint pattern to enforce the stamps"
+    ],
+    "retires": "the 'where did we leave off' reconstruction at the start of every session, and the trust-wait on an unstamped handoff"
+  },
+  {
+    "id": "crossing-lint",
+    "name": "Crossing lint (two-list identity gate)",
+    "summary": "a grep gate that refuses any file crossing from a private tree into a public repo, another machine or a pasted prompt when it carries a private shape (addresses, magic-DNS names, internal hostnames) or an off-repo literal (device names, people, domains, project codes); fails CLOSED when its literal list is missing",
+    "status": "stable",
+    "version": "1.0.0",
+    "files": [
+      "tools/crossing-lint.sh",
+      "tools/gate-generic.rules"
+    ],
+    "requires": [
+      "bash ≥ 4",
+      "GNU grep (-E and -P)",
+      "GNU coreutils (stat -c)",
+      "python3 (for the NFKC/ASCII-normalised second pass)"
+    ],
+    "retires": "the hand read of every file before it crosses, and the remembered question 'did a hostname slip into that diff?'"
+  },
+  {
+    "id": "exfil-guard",
+    "name": "Exfil-guard (one-shot credential exfiltration tripwire)",
+    "summary": "a PreToolUse hook for the Bash tool that denies a single command combining a secret path with a network egress tool (the fetch tools, nc, /dev/tcp…) — the classic one-shot credential exfiltration shape the file-read deny floor does not cover; fails OPEN on parse errors and only ever ADDS a deny",
+    "status": "stable",
+    "version": "1.0.0",
+    "files": [
+      "patterns/exfil-guard/files/exfil-guard.py"
+    ],
+    "requires": [
+      "python3 ≥ 3.9",
+      "a Claude Code hooks block in settings.json"
+    ],
+    "retires": "reading every Bash command of an agent session for the read-then-send shape"
+  },
+  {
+    "id": "generated-docs-check",
+    "name": "Generated-docs check (rendered outputs never drift from their sources)",
+    "summary": "a pre-push gate for any generated artefact committed next to its source (rendered HTML, a published JSON feed, a README block regenerated from a tracker): re-run the render into a scratch copy and refuse the push when the committed output differs — with --fix to regenerate in place",
+    "status": "stable",
+    "version": "1.0.0",
+    "files": [
+      "patterns/generated-docs-check/files/generated-check.sh"
+    ],
+    "requires": [
+      "bash",
+      "git",
+      "your render command"
+    ],
+    "retires": "the remembered 'did I re-render after editing the source?' and the stale-page bug reports it produced"
+  },
+  {
+    "id": "lessons-register",
+    "name": "Lessons register (schema + lint, enforced or named)",
+    "summary": "a JSON register of lessons learned where every row must say when it applies and WHERE it is enforced (status live, or proposed with a named landing spot — a bare TBD is not a legal row), with a linter that refuses the publish otherwise and reports the unenforced count as a visible clock",
+    "status": "stable",
+    "version": "1.0.0",
+    "files": [
+      "patterns/lessons-register/files/lessons.schema.json",
+      "patterns/lessons-register/files/lessons-lint.py",
+      "patterns/lessons-register/files/lessons.example.json"
+    ],
+    "requires": [
+      "python3 ≥ 3.9"
+    ],
+    "retires": "the lessons-learned document nobody re-reads, and the retro that produces advice with no owner"
+  },
+  {
+    "id": "pm-vocab-coach",
+    "name": "PM vocabulary coach (exam-prep by correction)",
+    "summary": "a passive skill that corrects a misused project-management term with ONE trailing ≤50-word block (right term · why · why yours was wrong, tagged to an exam domain), keeps a glossary of deliberate house terms it must never correct, logs each correction to an append-only file with a fixed schema, and nudges on domains that never come up",
+    "status": "stable",
+    "version": "1.0.0",
+    "files": [
+      "patterns/pm-vocab-coach/files/SKILL.md",
+      "patterns/pm-vocab-coach/files/references/glossary.md"
+    ],
+    "requires": [
+      "a harness that loads skills passively from a standing rule in the instruction file"
+    ],
+    "retires": "separate study time for vocabulary the day's work already surfaces, and the nagging about house terms used on purpose"
+  },
+  {
+    "id": "record-lint",
+    "name": "Record lint (provenance on added lines)",
+    "summary": "a pre-commit lint over the lines a commit ADDS to session records (closing blocks, snapshot touches, a tracker stamp, decision rows): each record carries an author/model/time stamp written from the live clock, every backticked commit hash resolves, every decision row names its author — so a record that passes is trusted without a wait; all repository-specific paths are a JSON config",
+    "status": "stable",
+    "version": "1.0.0",
+    "files": [
+      "patterns/record-lint/files/record-check.py",
+      "patterns/record-lint/files/record-lint.example.json"
+    ],
+    "requires": [
+      "python3 ≥ 3.9 (zoneinfo)",
+      "git"
+    ],
+    "retires": "the date-soak and the manual re-read of a session's closing records before the next session trusts them"
+  },
+  {
+    "id": "skill-packager",
+    "name": "Skill packager (front-matter validator + bundle builder)",
+    "summary": "one script that validates every skill's front matter (name/description present, description under the harness's length cap, no XML tags, folder name = skill name) and packages each skill folder into a distributable archive — run with --check in pre-commit so a skill that would silently fail to load never lands",
+    "status": "stable",
+    "version": "1.0.0",
+    "files": [
+      "patterns/skill-packager/files/package_skills.py"
+    ],
+    "requires": [
+      "python3 ≥ 3.11"
+    ],
+    "retires": "discovering a broken skill front matter by its absence from the skill list days later"
+  },
+  {
+    "id": "web-triage-cell",
+    "name": "Web-triage isolation cell for untrusted content",
+    "summary": "a fetch-only subagent (web fetch + web search, no shell, no files, no other tools) that reads every piece of untrusted external content — pages, search results, release notes, issues, forums, pasted URLs — and returns a fixed-schema digest with an INJECTION SIGNALS section; the main session never fetches or pastes raw web text",
+    "status": "stable",
+    "version": "1.0.0",
+    "files": [
+      "patterns/web-triage-cell/files/web-triage.md"
+    ],
+    "requires": [
+      "a harness with subagents and per-agent tool allowlists"
+    ],
+    "retires": "the judgment call 'is this page safe to read into my context?' on every fetch"
+  }
+]

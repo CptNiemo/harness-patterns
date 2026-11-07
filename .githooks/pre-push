@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# pre-push for the PUBLIC clone: re-scan the WHOLE history that is about to be pushed, not just the tip.
+# A publish that slipped a secret into an earlier commit would otherwise ride out under a clean tip.
+# 2026-11-06 (blind-review findings): the history is read RAW by this hook — `git log -p` with no colour, no external
+# diff, no textconv and every blob as text — and fed to `gitleaks stdin`, because `gitleaks git` runs its own `git log`,
+# which `color.ui`/`color.diff=always`, a `-diff`/`binary` attribute or a textconv driver can blind (all verified).
+# Identity is checked for author AND committer, email and name, on every commit: a rebase rewrites the committer and
+# runs no commit hook, so this is the last gate before the push.
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+NOREPLY='^[0-9]+\+[A-Za-z0-9-]+@users\.noreply\.github\.com$'
+NAME_BAD='@|\.(local|lan|home|internal|arpa)\.?$|\.ts\.net\.?$|^[0-9]{1,3}(\.[0-9]{1,3}){3}\.?$'
+command -v gitleaks >/dev/null 2>&1 || { echo "pre-push: gitleaks is not installed — refusing to push unscanned history" >&2; exit 2; }
+[ "$(git rev-list --all --count)" -gt 0 ] || exit 0   # nothing to push
+# 1. secrets anywhere in the history; the two gate rules files describe the hunted shapes and are exempt by path everywhere
+#    --diff-merges=first-parent: a merge commit's own diff is included too (an evil merge or a conflict resolution adds
+#    content that no other commit carries; plain `git log -p` prints nothing for merges)
+git log -p -U0 --full-history --all --diff-merges=first-parent --no-color --no-ext-diff --no-textconv --text --format='commit %H' \
+    -- . ':!tools/gate-generic.rules' ':!tools/gitleaks.toml' > "$TMP/history.patch" \
+    || { echo "pre-push: could not read the history" >&2; exit 2; }
+( cd "$TMP" && gitleaks stdin -v --redact --no-banner --no-color --ignore-gitleaks-allow --config "$ROOT/tools/gitleaks.toml" < "$TMP/history.patch" ) \
+    > "$TMP/gitleaks.out" 2> "$TMP/gitleaks.err" \
+    || { echo "pre-push: gitleaks found a secret somewhere in the history (or could not run)" >&2; head -n 8 "$TMP/gitleaks.out" "$TMP/gitleaks.err" >&2; exit 2; }
+# 2. identity on every commit, author and committer. Captured to files (a pipe into grep -q under pipefail can end in
+#    SIGPIPE on the writer and read as 'no match') and COUNTED, never string-tested: an empty email line is refused too.
+git log --all --format='%ae%n%ce' > "$TMP/emails"
+bad="$(grep -cvE "$NOREPLY" "$TMP/emails" || true)"   # non-essential: grep -c exits 1 when the count is 0
+[ "$bad" -eq 0 ] || { echo "pre-push: $bad author/committer email(s) in the history are not a GitHub noreply address" >&2; exit 2; }
+git log --all --format='%an%n%cn' > "$TMP/names"
+bad="$(grep -ciE "^$|$NAME_BAD" "$TMP/names" || true)"   # non-essential: grep -c exits 1 when the count is 0
+[ "$bad" -eq 0 ] || { echo "pre-push: $bad author/committer name(s) in the history are empty or read as an address or hostname" >&2; exit 2; }
+# 3. no trailers, no foreign commit ids
+git log --all --format='%B' > "$TMP/bodies"
+if grep -qiE '^(Co-Authored-By|Claude-Session|Signed-off-by|Change-Id):' "$TMP/bodies"; then
+    echo "pre-push: a trailer survives in the history" >&2; exit 2
+fi
+if grep -qE '\b[0-9a-f]{40}\b' "$TMP/bodies"; then
+    echo "pre-push: a full commit sha from elsewhere is in a commit message" >&2; exit 2
+fi
+# 4. the whole tree against every public shape rule (private addresses, magic-DNS names, hostnames, key blobs, …) with
+#    the one maintained rule file — the belt for a commit made with --no-verify; the rules files are exempt by name
+rc=0; CROSSING_LINT_GENERIC="$ROOT/tools/gate-generic.rules" bash "$ROOT/tools/crossing-lint.sh" --generic-only --quiet "$ROOT" || rc=$?
+case $rc in
+    0) ;;
+    1) echo "pre-push: a private shape is in the tree (lines above)" >&2; exit 2 ;;
+    *) echo "pre-push: crossing-lint could not run over the tree (configuration error above, rc=$rc)" >&2; exit 2 ;;
+esac
+exit 0

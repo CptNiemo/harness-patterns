@@ -1,0 +1,16 @@
+{
+  "id": "lessons-register",
+  "name": "Lessons register (schema + lint, enforced or named)",
+  "summary": "a JSON register of lessons learned where every row must say when it applies and WHERE it is enforced (status live, or proposed with a named landing spot — a bare TBD is not a legal row), with a linter that refuses the publish otherwise and reports the unenforced count as a visible clock",
+  "status": "stable",
+  "version": "1.0.0",
+  "files": [
+    "patterns/lessons-register/files/lessons.schema.json",
+    "patterns/lessons-register/files/lessons-lint.py",
+    "patterns/lessons-register/files/lessons.example.json"
+  ],
+  "requires": [
+    "python3 ≥ 3.9"
+  ],
+  "retires": "the lessons-learned document nobody re-reads, and the retro that produces advice with no owner"
+}

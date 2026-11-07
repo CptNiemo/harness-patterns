@@ -1,0 +1,26 @@
+{
+  "updated": "2026-11-02",
+  "_comment": "two example rows in the register's shape; replace with your own and keep the lint in pre-commit",
+  "lessons": [
+    {
+      "lesson": "Never let a retention job delete an older artefact until the newest one is proven to come from a completed run (a completion sentinel or manifest gate) — retention that keeps the newest-named directory is one failed run from zero backups.",
+      "source_project": "an earlier backup retention incident",
+      "category": "data-safety",
+      "applies_when": "designing or reviewing any prune / retention / rotation step",
+      "enforcement": {
+        "status": "live",
+        "where": "the prune script's manifest gate (it refuses to delete until the newest run's completion sentinel exists) + a quarterly restore drill in the runbook"
+      }
+    },
+    {
+      "lesson": "Fixed-schema batch extraction (any many-call JSON job) runs on the cheapest model tier that passes its own grader — never a flagship tier by default; chunk small, disable tools when the prompt inlines the text, checkpoint per batch so a model switch loses nothing.",
+      "source_project": "a batch-extraction job",
+      "category": "process",
+      "applies_when": "any headless many-call job before its model is chosen",
+      "enforcement": {
+        "status": "proposed",
+        "where": "the batch runner's defaults (model, chunk size, tools off)"
+      }
+    }
+  ]
+}

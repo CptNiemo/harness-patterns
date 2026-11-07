@@ -1,0 +1,15 @@
+{
+  "_comment": "record-lint (record-check.py --config): every repository-specific literal is a default this file may override. Paths are regexes/paths relative to the repo root; author_words is a case-insensitive regex of the words a ruling row must carry; the two windows are minutes; date_gate = commits older than this are never judged on contemporaneity.",
+  "continuity_paths": "^notes/sessions/[^/]+\\.md$",
+  "ruling_docs": "^notes/(decisions|research)/[^/]+\\.md$",
+  "snapshot_path": "notes/state/snapshot.md",
+  "tracker_path": "notes/state/projects.json",
+  "author_words": "\\bowner\\b|\\bpick\\b|verdict|PROPOSED",
+  "ruling_row": "^\\|\\s*[A-Z]\\d+\\s*\\|",
+  "author_words_label": "owner / pick / verdict / PROPOSED",
+  "exempt_marker": "alcoa-exempt",
+  "timezone": "UTC",
+  "stamp_behind_minutes": 120,
+  "stamp_ahead_minutes": 15,
+  "date_gate": "1970-01-01T00:00:00+00:00"
+}

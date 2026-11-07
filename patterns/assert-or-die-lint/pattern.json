@@ -1,0 +1,15 @@
+{
+  "id": "assert-or-die-lint",
+  "name": "Assert-or-die lint for operational scripts",
+  "summary": "an on-touch pre-commit lint for backup, sync and probe scripts: a measured value must gate the exit code and ride the success signal — or must not be measured at all; flags sizes/counts that are only logged, WARN anywhere (comments included), heartbeats without an evidence payload, and bare `|| true` without a reason",
+  "status": "stable",
+  "version": "1.0.0",
+  "files": [
+    "patterns/assert-or-die-lint/files/lint-assert-or-die.sh"
+  ],
+  "requires": [
+    "bash",
+    "grep -E"
+  ],
+  "retires": "the code review that asks 'does this script's green actually mean anything?'"
+}

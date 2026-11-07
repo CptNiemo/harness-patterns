@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# commit-msg for the PUBLIC clone: no trailers that name a private session, tool or co-author; no private commit shas.
+set -euo pipefail
+msg="$1"
+if grep -qiE '^(Co-Authored-By|Claude-Session|Signed-off-by|Change-Id):' "$msg"; then
+    echo "commit-msg: trailers are not allowed in the public history" >&2; exit 2
+fi
+if grep -qE '\b[0-9a-f]{40}\b' "$msg"; then
+    echo "commit-msg: a 40-hex sha in the message — private commit ids never cross" >&2; exit 2
+fi
+exit 0

@@ -1,0 +1,14 @@
+{
+  "id": "skill-packager",
+  "name": "Skill packager (front-matter validator + bundle builder)",
+  "summary": "one script that validates every skill's front matter (name/description present, description under the harness's length cap, no XML tags, folder name = skill name) and packages each skill folder into a distributable archive — run with --check in pre-commit so a skill that would silently fail to load never lands",
+  "status": "stable",
+  "version": "1.0.0",
+  "files": [
+    "patterns/skill-packager/files/package_skills.py"
+  ],
+  "requires": [
+    "python3 ≥ 3.11"
+  ],
+  "retires": "discovering a broken skill front matter by its absence from the skill list days later"
+}

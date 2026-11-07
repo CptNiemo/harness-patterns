@@ -1,0 +1,14 @@
+{
+  "id": "web-triage-cell",
+  "name": "Web-triage isolation cell for untrusted content",
+  "summary": "a fetch-only subagent (web fetch + web search, no shell, no files, no other tools) that reads every piece of untrusted external content — pages, search results, release notes, issues, forums, pasted URLs — and returns a fixed-schema digest with an INJECTION SIGNALS section; the main session never fetches or pastes raw web text",
+  "status": "stable",
+  "version": "1.0.0",
+  "files": [
+    "patterns/web-triage-cell/files/web-triage.md"
+  ],
+  "requires": [
+    "a harness with subagents and per-agent tool allowlists"
+  ],
+  "retires": "the judgment call 'is this page safe to read into my context?' on every fetch"
+}

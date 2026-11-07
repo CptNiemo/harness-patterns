@@ -1,0 +1,16 @@
+{
+  "id": "generated-docs-check",
+  "name": "Generated-docs check (rendered outputs never drift from their sources)",
+  "summary": "a pre-push gate for any generated artefact committed next to its source (rendered HTML, a published JSON feed, a README block regenerated from a tracker): re-run the render into a scratch copy and refuse the push when the committed output differs — with --fix to regenerate in place",
+  "status": "stable",
+  "version": "1.0.0",
+  "files": [
+    "patterns/generated-docs-check/files/generated-check.sh"
+  ],
+  "requires": [
+    "bash",
+    "git",
+    "your render command"
+  ],
+  "retires": "the remembered 'did I re-render after editing the source?' and the stale-page bug reports it produced"
+}

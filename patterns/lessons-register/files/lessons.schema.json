@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "lessons register",
+  "type": "object",
+  "required": [
+    "updated",
+    "lessons"
+  ],
+  "properties": {
+    "updated": {
+      "type": "string",
+      "description": "ISO date of the last edit"
+    },
+    "_comment": {
+      "type": "string"
+    },
+    "lessons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "lesson",
+          "source_project",
+          "category",
+          "applies_when",
+          "enforcement"
+        ],
+        "properties": {
+          "lesson": {
+            "type": "string",
+            "minLength": 20,
+            "description": "the rule, generalised past the incident that taught it"
+          },
+          "source_project": {
+            "type": "string",
+            "description": "project id(s) and/or incident file that taught it"
+          },
+          "category": {
+            "type": "string",
+            "description": "one of your taxonomy's categories (the lint can enforce an allowlist)"
+          },
+          "applies_when": {
+            "type": "string",
+            "minLength": 10,
+            "description": "the pre-flight moment a reader should re-read this row"
+          },
+          "enforcement": {
+            "type": "object",
+            "required": [
+              "status",
+              "where"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "live",
+                  "proposed"
+                ]
+              },
+              "where": {
+                "type": "string",
+                "minLength": 3,
+                "description": "the hook, lint, monitor, skill section or runbook step that enforces it \u2014 or, for proposed, the named landing spot"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

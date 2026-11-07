@@ -1,0 +1,15 @@
+{
+  "id": "pm-vocab-coach",
+  "name": "PM vocabulary coach (exam-prep by correction)",
+  "summary": "a passive skill that corrects a misused project-management term with ONE trailing ≤50-word block (right term · why · why yours was wrong, tagged to an exam domain), keeps a glossary of deliberate house terms it must never correct, logs each correction to an append-only file with a fixed schema, and nudges on domains that never come up",
+  "status": "stable",
+  "version": "1.0.0",
+  "files": [
+    "patterns/pm-vocab-coach/files/SKILL.md",
+    "patterns/pm-vocab-coach/files/references/glossary.md"
+  ],
+  "requires": [
+    "a harness that loads skills passively from a standing rule in the instruction file"
+  ],
+  "retires": "separate study time for vocabulary the day's work already surfaces, and the nagging about house terms used on purpose"
+}

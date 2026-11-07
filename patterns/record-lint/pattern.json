@@ -1,0 +1,16 @@
+{
+  "id": "record-lint",
+  "name": "Record lint (provenance on added lines)",
+  "summary": "a pre-commit lint over the lines a commit ADDS to session records (closing blocks, snapshot touches, a tracker stamp, decision rows): each record carries an author/model/time stamp written from the live clock, every backticked commit hash resolves, every decision row names its author — so a record that passes is trusted without a wait; all repository-specific paths are a JSON config",
+  "status": "stable",
+  "version": "1.0.0",
+  "files": [
+    "patterns/record-lint/files/record-check.py",
+    "patterns/record-lint/files/record-lint.example.json"
+  ],
+  "requires": [
+    "python3 ≥ 3.9 (zoneinfo)",
+    "git"
+  ],
+  "retires": "the date-soak and the manual re-read of a session's closing records before the next session trusts them"
+}
