@@ -1,0 +1,14 @@
+# Line endings are part of the gate: a hook with CR endings does not run under bash, and the hooks refuse a lint, rules or
+# identity file that carries CR. The files are named one by one on purpose — a folder glob such as `tools/**` would also
+# force tracked binaries under that folder to text and corrupt them on normalisation.
+.githooks/pre-commit text eol=lf
+.githooks/pre-merge-commit text eol=lf
+.githooks/pre-push text eol=lf
+.githooks/commit-msg text eol=lf
+tools/crossing-lint.sh text eol=lf
+tools/gate-generic.rules text eol=lf
+tools/gitleaks.toml text eol=lf
+tools/identity.rules text eol=lf
+tools/preflight-public.sh text eol=lf
+patterns/added-lines-gate/files/pre-commit-block.sh text eol=lf
+patterns/added-lines-gate/files/pre-commit-gitleaks-block.sh text eol=lf

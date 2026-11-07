@@ -9,10 +9,17 @@
 set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
-NOREPLY='^[0-9]+\+[A-Za-z0-9-]+@users\.noreply\.github\.com$'
-NAME_BAD='@|\.(local|lan|home|internal|arpa)\.?$|\.ts\.net\.?$|^[0-9]{1,3}(\.[0-9]{1,3}){3}\.?$'
 command -v gitleaks >/dev/null 2>&1 || { echo "pre-push: gitleaks is not installed — refusing to push unscanned history" >&2; exit 2; }
 [ "$(git rev-list --all --count)" -gt 0 ] || exit 0   # nothing to push
+# the identity rule in force is HEAD's tools/identity.rules (one file for the hooks, the preflight and the lane); the whole
+# history is judged by it, author and committer, email and name
+git show HEAD:tools/identity.rules > "$TMP/identity.rules" 2>/dev/null || { echo "pre-push: tools/identity.rules is not in HEAD — refusing" >&2; exit 2; }
+rc=0; grep -qa $'\r' "$TMP/identity.rules" || rc=$?   # `|| rc=$?`: this hook runs under set -e; a bare grep rc=1 would exit it silently
+case $rc in 0) echo "pre-push: tools/identity.rules carries CR line endings" >&2; exit 2 ;; 1) ;; *) echo "pre-push: cannot read tools/identity.rules" >&2; exit 2 ;; esac
+rule_of() { awk -v k="$1" '$1 == k && NF >= 2 { sub(/^[[:space:]]*[^[:space:]]+[[:space:]]+/, ""); sub(/[[:space:]]+$/, ""); print; exit }' "$TMP/identity.rules"; }   # one process, no pipe; the value is trimmed
+rule_ok() { [ -n "$1" ] || return 1; case $1 in *[[:space:]]*) return 1 ;; esac; local rc=0; printf '' | grep -qE -e "$1" || rc=$?; [ "$rc" -ne 2 ]; }   # one token, compiles
+EMAIL_RE="$(rule_of email)"; NAME_BAD="$(rule_of name_bad)"
+rule_ok "$EMAIL_RE" && rule_ok "$NAME_BAD" || { echo "pre-push: tools/identity.rules must carry an 'email' and a 'name_bad' rule, one token each, that compile" >&2; exit 2; }
 # 1. secrets anywhere in the history; the two gate rules files describe the hunted shapes and are exempt by path everywhere
 #    --diff-merges=first-parent: a merge commit's own diff is included too (an evil merge or a conflict resolution adds
 #    content that no other commit carries; plain `git log -p` prints nothing for merges)
@@ -25,8 +32,8 @@ git log -p -U0 --full-history --all --diff-merges=first-parent --no-color --no-e
 # 2. identity on every commit, author and committer. Captured to files (a pipe into grep -q under pipefail can end in
 #    SIGPIPE on the writer and read as 'no match') and COUNTED, never string-tested: an empty email line is refused too.
 git log --all --format='%ae%n%ce' > "$TMP/emails"
-bad="$(grep -cvE "$NOREPLY" "$TMP/emails" || true)"   # non-essential: grep -c exits 1 when the count is 0
-[ "$bad" -eq 0 ] || { echo "pre-push: $bad author/committer email(s) in the history are not a GitHub noreply address" >&2; exit 2; }
+bad="$(grep -cvE "$EMAIL_RE" "$TMP/emails" || true)"   # non-essential: grep -c exits 1 when the count is 0
+[ "$bad" -eq 0 ] || { echo "pre-push: $bad author/committer email(s) in the history do not match the email rule in tools/identity.rules" >&2; exit 2; }
 git log --all --format='%an%n%cn' > "$TMP/names"
 bad="$(grep -ciE "^$|$NAME_BAD" "$TMP/names" || true)"   # non-essential: grep -c exits 1 when the count is 0
 [ "$bad" -eq 0 ] || { echo "pre-push: $bad author/committer name(s) in the history are empty or read as an address or hostname" >&2; exit 2; }

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# pre-merge-commit: a merge that completes without conflicts runs THIS hook, not pre-commit, so it runs the same checks on
+# the merge result (an added-lines gate re-checks every line the merge brings in). A conflicted merge runs pre-commit when
+# it is committed; a fast-forward runs no hook at all (git's design) — `git config merge.ff false` makes every merge a
+# merge commit. It finds pre-commit beside itself, wherever core.hooksPath points.
+d="${0%/*}"; [ "$d" != "$0" ] || d=.
+exec bash "$d/pre-commit"

@@ -7,17 +7,28 @@
 # hostname); type changes are included; the secret scan runs `gitleaks stdin` over the staged blobs, because
 # `gitleaks git --pre-commit --staged` reads its own `git diff`, which `color.ui=always` blinds (exit 1 -> 0, tested).
 # The lint's address rules make the old separate added-lines grep redundant; it is gone.
+# 2026-11-07: the identity regexes moved to tools/identity.rules (one copy for every reader).
 # Needs bash >= 4 (lower-casing); GNU coreutils; gitleaks >= 8.19 (stdin/dir modes); git >= 2.31.
 set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
-NOREPLY='^[0-9]+\+[A-Za-z0-9-]+@users\.noreply\.github\.com$'
-NAME_BAD='@|\.(local|lan|home|internal|arpa)\.?$|\.ts\.net\.?$|^[0-9]{1,3}(\.[0-9]{1,3}){3}\.?$'
+# the identity rule lives in tools/identity.rules — one file for this hook, pre-push, the preflight and the lane — read
+# from HEAD so a commit cannot loosen the rule that judges it; a commit with no HEAD copy yet (the root commit, the publish
+# that first ships the file) is judged by the STAGED copy, the one being committed — never the working tree
+if git cat-file -e HEAD:tools/identity.rules 2>/dev/null; then git cat-file blob HEAD:tools/identity.rules > "$TMP/identity.rules"
+elif git cat-file -e :tools/identity.rules 2>/dev/null; then git cat-file blob :tools/identity.rules > "$TMP/identity.rules"
+else echo "pre-commit: tools/identity.rules is neither in HEAD nor staged — refusing" >&2; exit 2; fi
+rc=0; grep -qa $'\r' "$TMP/identity.rules" || rc=$?   # `|| rc=$?`: this hook runs under set -e; a bare grep rc=1 would exit it silently
+case $rc in 0) echo "pre-commit: tools/identity.rules carries CR line endings (see .gitattributes)" >&2; exit 2 ;; 1) ;; *) echo "pre-commit: cannot read tools/identity.rules" >&2; exit 2 ;; esac
+rule_of() { awk -v k="$1" '$1 == k && NF >= 2 { sub(/^[[:space:]]*[^[:space:]]+[[:space:]]+/, ""); sub(/[[:space:]]+$/, ""); print; exit }' "$TMP/identity.rules"; }   # one process, no pipe; the value is trimmed
+rule_ok() { [ -n "$1" ] || return 1; case $1 in *[[:space:]]*) return 1 ;; esac; local rc=0; printf '' | grep -qE -e "$1" || rc=$?; [ "$rc" -ne 2 ]; }   # one token, compiles
+EMAIL_RE="$(rule_of email)"; NAME_BAD="$(rule_of name_bad)"
+rule_ok "$EMAIL_RE" && rule_ok "$NAME_BAD" || { echo "pre-commit: tools/identity.rules must carry an 'email' and a 'name_bad' rule, one token each, that compile" >&2; exit 2; }
 for role in AUTHOR COMMITTER; do
     lc="$(printf '%s' "$role" | tr 'A-Z' 'a-z')"
     ident="$(git var "GIT_${role}_IDENT")" || { echo "pre-commit: cannot determine the $lc identity" >&2; exit 2; }
     email="${ident##*<}"; email="${email%%>*}"; name="${ident%% <*}"
-    [[ $email =~ $NOREPLY ]] || { echo "pre-commit: $lc email must be a GitHub noreply address (got '$email')" >&2; exit 2; }
+    [[ $email =~ $EMAIL_RE ]] || { echo "pre-commit: $lc email '$email' does not match the email rule in tools/identity.rules" >&2; exit 2; }
     if [ -z "$name" ] || [[ ${name,,} =~ $NAME_BAD ]]; then
         echo "pre-commit: $lc name must be a handle, not an address or hostname (got '$name')" >&2; exit 2
     fi

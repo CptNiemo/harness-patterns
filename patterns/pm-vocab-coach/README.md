@@ -6,7 +6,7 @@ A skill wired to a standing rule in the instruction file (it also fixes genuinel
 document you are already editing — never a whole-file sweep): when the user misuses a project-management term
 (PMBOK / process-group / agile-guide vocabulary), the reply gains ONE trailing block, at most 50 words —
 `you said X → the standard says Y`, why Y fits, why X was wrong, tagged to an exam domain. Deliberate house
-terms (your own names for a soak, a rider, a slot) are mapped once in `references/glossary.md` and never
+terms (your team's own names for a review stage, an add-on, a work-in-progress cap) are mapped once in `references/glossary.md` and never
 corrected. Each correction is logged to an append-only file with a fixed schema; a nudge fires for domains
 the log has not touched in two weeks. "What's the standard term for X" is a lookup, logged as such.
 

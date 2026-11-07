@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # commit-msg for the PUBLIC clone: no trailers that name a private session, tool or co-author; no private commit shas.
+# Public clone ONLY — a repository with a human history does not install it: its trailer rule refuses the co-author and
+# session trailers such a history carries on purpose, and its 40-hex rule refuses an amended revert or cherry-pick message
+# (git's sequencer commits with -n, so a plain revert never even meets a commit hook). See patterns/added-lines-gate.
 set -euo pipefail
 msg="$1"
 if grep -qiE '^(Co-Authored-By|Claude-Session|Signed-off-by|Change-Id):' "$msg"; then

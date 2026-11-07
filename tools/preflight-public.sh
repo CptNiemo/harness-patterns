@@ -9,13 +9,19 @@ bad()  { printf 'FAIL %s\n' "$1"; fail=1; }
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "not inside a git repository" >&2; exit 2; }
 cd "$ROOT"
 [ "$(git config core.hooksPath)" = ".githooks" ] && ok "hooks installed (core.hooksPath=.githooks)" || bad "hooks not installed: git config core.hooksPath .githooks"
-for h in pre-commit commit-msg pre-push; do [ -x ".githooks/$h" ] && ok "hook executable: $h" || bad "hook missing or not executable: $h"; done
+for h in pre-commit commit-msg pre-push pre-merge-commit; do [ -x ".githooks/$h" ] && ok "hook executable: $h" || bad "hook missing or not executable: $h"; done
 # identity on every commit, author AND committer (a rebase rewrites the committer); counted, never string-tested, so an
 # empty email line fails too. Captured to files first: a pipe into grep -q under pipefail can read as 'no match' on SIGPIPE.
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
-NAME_BAD='@|\.(local|lan|home|internal|arpa)\.?$|\.ts\.net\.?$|^[0-9]{1,3}(\.[0-9]{1,3}){3}\.?$'
+# the rule itself lives in tools/identity.rules; the history is judged by HEAD's copy (as pre-push does), never by the
+# checked-out file — a tampered working copy must not make the history read PASS
+git show HEAD:tools/identity.rules > "$TMP/identity.rules" 2>/dev/null || : > "$TMP/identity.rules"
+rule_of() { awk -v k="$1" '$1 == k && NF >= 2 { sub(/^[[:space:]]*[^[:space:]]+[[:space:]]+/, ""); sub(/[[:space:]]+$/, ""); print; exit }' "$TMP/identity.rules" 2>/dev/null; }   # one process, no pipe; the value is trimmed
+rule_ok() { [ -n "$1" ] || return 1; case $1 in *[[:space:]]*) return 1 ;; esac; local rc=0; printf '' | grep -qE -e "$1" || rc=$?; [ "$rc" -ne 2 ]; }   # one token, compiles
+EMAIL_RE="$(rule_of email)"; NAME_BAD="$(rule_of name_bad)"
+if rule_ok "$EMAIL_RE" && rule_ok "$NAME_BAD" && ! grep -qa $'\r' "$TMP/identity.rules"; then ok "HEAD's tools/identity.rules loads (email + name_bad rules, LF)"; else bad "tools/identity.rules missing from HEAD, incomplete, not compiling or CR-terminated"; EMAIL_RE='^$'; NAME_BAD='.'; fi
 git log --all --format='%ae%n%ce' > "$TMP/emails"; git log --all --format='%an%n%cn' > "$TMP/names"
-[ "$(grep -cvE '^[0-9]+\+[A-Za-z0-9-]+@users\.noreply\.github\.com$' "$TMP/emails")" = 0 ] && ok "every author and committer email is a noreply address" || bad "an author or committer email in the history is not a noreply address"
+[ "$(grep -cvE "$EMAIL_RE" "$TMP/emails")" = 0 ] && ok "every author and committer email matches the email rule" || bad "an author or committer email in the history does not match the email rule in tools/identity.rules"
 [ "$(grep -ciE "^$|$NAME_BAD" "$TMP/names")" = 0 ] && ok "every author and committer name is a bare handle" || bad "an author or committer name in the history is empty or reads as an address or hostname"
 bodies="$(git log --all --format='%B')"
 grep -qiE '^(Co-Authored-By|Claude-Session|Signed-off-by|Change-Id):' <<<"$bodies" && bad "a trailer is in the history" || ok "no trailers in the history"

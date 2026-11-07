@@ -1,0 +1,12 @@
+# identity.rules — the commit identity rule, in ONE place. The clone's pre-commit and pre-push, tools/preflight-public.sh,
+# the lane's publish gate and the added-lines gate all read it, the hooks from HEAD (a commit cannot loosen the rule that
+# judges it; the first commit of a repository, with no HEAD yet, reads the staged copy — never the working tree).
+# Two keys, each one extended regex (grep -E / bash [[ =~ ]]), matched against the identity git RECORDS for the author AND
+# the committer (so --author, `git -c` and the GIT_* variables count):
+#   email     the whole address must match
+#   name_bad  what a name may NOT be: an address, a hostname, a dotted quad (names are handles)
+# A value is ONE token: whitespace around it is trimmed, whitespace inside it refuses. A repository that commits under another
+# address edits the `email` line only. A missing key, a regex that does not compile or CR line endings refuse every commit
+# (fail closed) — see .gitattributes.
+email ^[0-9]+\+[A-Za-z0-9-]+@users\.noreply\.github\.com$
+name_bad @|\.(local|lan|home|internal|arpa)\.?$|\.ts\.net\.?$|^[0-9]{1,3}(\.[0-9]{1,3}){3}\.?$

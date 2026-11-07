@@ -1,6 +1,6 @@
 # PROVENANCE
 
-Export #5 · 2026-11 · produced by an allowlist-driven, gated export from a private repository.
+Export #6 · 2026-11 · produced by an allowlist-driven, gated export from a private repository.
 No private history exists here: every file is a reviewed copy; this repository's own history is the only history.
 
 ## Gates at build (0 = passed)
@@ -18,13 +18,19 @@ No private history exists here: every file is a reviewed copy; this repository's
 
 ## Files (sha256)
 
-- `.githooks/commit-msg` `1a09cc306963a682e8b35cbcdbed41a072f37d340cd036c903ea51639fbacdf9`
-- `.githooks/pre-commit` `30bb0386084e54fb459439ff54e69bb7d0ae41a7e7d2dcf1119282b10117280b`
-- `.githooks/pre-push` `a1f7bbf6a393ff70567a3dc730faad48afe8198c1c814afa9e3e92b301d34a26`
-- `CATALOG.json` `538d48c4795468ac17b63cf44f8e6c114724d18efec9618d69a76513816d2cc9`
+- `.gitattributes` `cb7035f1e58e29682cd8d6e1e5fe0077ba7f55fc369278aca251cf0c3052670b`
+- `.githooks/commit-msg` `c36c6ade37501acbac1173bfac6931fec8222691575637b4c6597c8622ae31b0`
+- `.githooks/pre-commit` `176ea9a2c22fddf56b380c76345ec437379394602c246e8c9d8193b578bbf371`
+- `.githooks/pre-merge-commit` `2ae5d9e29a33cc9bad43d26b44346484f8589e66178701796a95b0e76c0a11f3`
+- `.githooks/pre-push` `9511bde29dc30a4bb58c7043edd40622a3248d9b6e60e5312d488ba747c2177a`
+- `CATALOG.json` `3552f959a99b96d7175e3fa766428022603c53c4865f72f88fa832bceb906c7e`
 - `LICENSE` `2d11a9fa8ca23f4a7022a4e0e1f13c2eb4b86a8509bd97262f71f08d8ccc7333`
-- `README.md` `3d6a810544e8453ba3aca962407b721f70c8e250a40d8ad53d9d4a7d8eb3897c`
+- `README.md` `25724197a70e3515908c1a5f5020dc599fa85dd17a1b979794df837237a12000`
 - `SECURITY.md` `85871152f5ddb7225ee4c30ae5bda2e2fb511bd97bdabb727a7a20026a3930a1`
+- `patterns/added-lines-gate/README.md` `d1430f58073cf849ad0fec78f41abb7ec8a28e09878fc9399ae249dc4e63d86a`
+- `patterns/added-lines-gate/files/pre-commit-block.sh` `47f9194f40b9720ccd3687514cdd07b6ad76b411a3742f9806dffc432114e7ff`
+- `patterns/added-lines-gate/files/pre-commit-gitleaks-block.sh` `f3c065ac5dba3ea83a0330d65b72d61ddb8896fefb3cb5b3eb273b5a9675eb85`
+- `patterns/added-lines-gate/pattern.json` `837716558ebac9e57f8df8fb832d641ede83391486824a28433d7f74fdbc5761`
 - `patterns/assert-or-die-lint/README.md` `3617d58be3e376eebd87b9560e5e216b2f37ce1f9053da7caf8ca9588526692c`
 - `patterns/assert-or-die-lint/files/lint-assert-or-die.sh` `6ce92c31f6f425c2fa018c8600d25b555958cf72909ba3c63edc735d0112fbb7`
 - `patterns/assert-or-die-lint/pattern.json` `fca862cf184e5a09a746bc8e379f0364bfd7d5c2186d614d57f35a3c42c5a4f7`
@@ -44,7 +50,7 @@ No private history exists here: every file is a reviewed copy; this repository's
 - `patterns/lessons-register/files/lessons.example.json` `ccec73ce21f90943015f8c3e2fb9fdb42159ced9d0f8ccfeeda1d5b9680fd4f6`
 - `patterns/lessons-register/files/lessons.schema.json` `9fce689ca4bf3b67597b2c3b19a373ac542ea6fbd00aa1f14180189eacae3b05`
 - `patterns/lessons-register/pattern.json` `c7cf83b3f36a59e71917f7738b8f78365f3a7f152a7f3772b54ff013c2a37f22`
-- `patterns/pm-vocab-coach/README.md` `58e4e9dc529deb44a2f594bb7c797fd3d75cdcd5b318ca4087e337601c44bd5f`
+- `patterns/pm-vocab-coach/README.md` `8e5a74780eb735a16d307b612547d020c0fd331fe7baf4589c394080c7890a4f`
 - `patterns/pm-vocab-coach/files/SKILL.md` `31a14c7b1c03c63c9cc0d94ee740a9bacfe7c94aadc4856b733908e478031077`
 - `patterns/pm-vocab-coach/files/references/glossary.md` `2a8e7b699b9ef6abb155a8b2ef5795204244e88e3f01a78292126cbf8441de2f`
 - `patterns/pm-vocab-coach/pattern.json` `170591ac1d8cc92f3b65cc2fd7a8d2af5c6069e5741040c718585e05645dbce6`
@@ -61,4 +67,5 @@ No private history exists here: every file is a reviewed copy; this repository's
 - `tools/crossing-lint.sh` `4a469adb94e1de99e57490aa5afca25ab9f8a831cf0f8cb3522b9e5cb8de22ab`
 - `tools/gate-generic.rules` `cf3de4b03feeaa63cdcc8ed463979f8b91dd5da41c97462638593f352f4cc346`
 - `tools/gitleaks.toml` `0b3a621cd209e470d35aacf5291052ed2fedb1abbf6f5435eead9ef8ca090e18`
-- `tools/preflight-public.sh` `69aae18eb15e4700341f7f2d7ea316d2b2daf51b267e4b7404a2772fb0f34aa0`
+- `tools/identity.rules` `5785f40af257eca5581204107115107ae997f80d3be941eb8640faef25a50780`
+- `tools/preflight-public.sh` `c3a070b8b5f544dd9c77261b4ff66860bff6c962ca6bda1df181cc8c87a6daf5`

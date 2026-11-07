@@ -1,5 +1,27 @@
 [
   {
+    "id": "added-lines-gate",
+    "name": "Added-lines gate (a pre-commit block for a repository whose history you do not own)",
+    "summary": "a block appended after a repository's existing pre-commit layers that judges only what a commit ADDS (added lines and new paths) against the crossing lint, one identity rule and gitleaks; it reads its own gate files from HEAD so a commit cannot loosen the rule that judges it, lets lines already committed on the branch pass, re-checks the lines a merge brings in (pre-merge-commit), and fails CLOSED when a gate file is missing, unreadable or broken",
+    "status": "stable",
+    "version": "1.0.0",
+    "files": [
+      "patterns/added-lines-gate/files/pre-commit-block.sh",
+      "patterns/added-lines-gate/files/pre-commit-gitleaks-block.sh",
+      ".githooks/pre-merge-commit",
+      "tools/identity.rules"
+    ],
+    "requires": [
+      "bash ≥ 4",
+      "git ≥ 2.31",
+      "GNU awk, GNU grep, GNU coreutils",
+      "python3 (the lint's normalised pass; UTF-8 mode is set by the lint)",
+      "tools/crossing-lint.sh + tools/gate-generic.rules (the crossing-lint pattern)",
+      "gitleaks ≥ 8.19.0 for the second block (8.30.1 pinned)"
+    ],
+    "retires": "the audit of every existing false positive before a gate can go on a shared repository, and the hand read of what a merge or cherry-pick brought in"
+  },
+  {
     "id": "assert-or-die-lint",
     "name": "Assert-or-die lint for operational scripts",
     "summary": "an on-touch pre-commit lint for backup, sync and probe scripts: a measured value must gate the exit code and ride the success signal — or must not be measured at all; flags sizes/counts that are only logged, WARN anywhere (comments included), heartbeats without an evidence payload, and bare `|| true` without a reason",
