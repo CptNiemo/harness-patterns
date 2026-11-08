@@ -178,11 +178,67 @@ def commit_exists(repo: str, h: str) -> bool:
     return git(repo, "cat-file", "-e", f"{h}^{{commit}}", check=False).returncode == 0
 
 
+def r5_stamp(blob: str) -> tuple[str | None, str]:
+    """R5: the tracker's TOP-LEVEL `updated_stamp`, read through the json parser. A regex over the raw text stopped at
+    the first escaped quote, so a label quoting someone in double quotes failed R5 although it carried a valid stamp
+    (found 2026-11-04). Returns (value, "") when the value carries the stamp, else (None, why)."""
+    missing = "top-level updated_stamp missing or not a (DDMonthYYYY/HH:MMAM/Model/Effort/Mode) stamp"
+    if not blob.strip():
+        return None, missing                  # the tracker is absent from the index / commit
+    try:
+        data = json.loads(blob)
+    except json.JSONDecodeError as e:
+        return None, f"tracker is not valid JSON (line {e.lineno} column {e.colno}), so its updated_stamp cannot be read"
+    value = data.get("updated_stamp") if isinstance(data, dict) else None
+    if not isinstance(value, str) or not STAMP.search(value):
+        return None, missing
+    return value, ""
+
+
+def selftest() -> int:
+    """--selftest: R5 on temp tracker files (stdlib only, no git). Prints one FAIL line per broken case, one JSON
+    summary line, then `[alcoa] selftest OK cases=N` / `[alcoa] selftest FAIL fails=F cases=N`; exit 0 / 1."""
+    import os
+    import tempfile
+    st = "04November2026/05:05PM/Model-1/HIGH/Auto)"
+    cases = [  # (name, tracker object — or raw text for the broken-JSON case, R5 should pass)
+        ("label quoting in double quotes + valid stamp", {"updated_stamp": f'relabel; said "commit it" ({st}', "projects": []}, True),
+        ("plain label + valid stamp", {"updated_stamp": f"tracker edit ({st}", "projects": []}, True),
+        ("updated_stamp missing", {"projects": []}, False),
+        ("quoted label, no stamp", {"updated_stamp": 'said "commit it"', "projects": []}, False),
+        ("stamp only on a nested object (R5 reads the top level)", {"projects": [{"updated_stamp": f"x ({st}"}]}, False),
+        ("not valid JSON", '{"updated_stamp": "x (' + st, False),
+    ]
+    fails: list[str] = []
+    with tempfile.TemporaryDirectory() as d:
+        for i, (name, tracker, want) in enumerate(cases):
+            path = os.path.join(d, f"projects-{i}.json")
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(tracker if isinstance(tracker, str) else json.dumps(tracker, indent=2))
+            with open(path, encoding="utf-8") as fh:
+                raw = fh.read()
+            got = r5_stamp(raw)[0] is not None
+            if got != want:
+                fails.append(f"[alcoa] selftest FAIL R5 case '{name}' passed={got} expected={want}")
+            if i == 0:
+                # the regression case must be one the pre-fix regex failed, or it guards nothing
+                old = re.search(r'"updated_stamp"\s*:\s*"([^"]*)"', raw)
+                if old and STAMP.search(old.group(1)):
+                    fails.append("[alcoa] selftest FAIL R5 regression case no longer puts an escaped quote before the stamp")
+    for f in fails:
+        print(f)
+    print(json.dumps({"event": "alcoa_selftest", "script": os.path.basename(__file__), "rule": "R5",
+                      "cases": len(cases), "fails": len(fails)}))
+    print(f"[alcoa] selftest FAIL fails={len(fails)} cases={len(cases)}" if fails else f"[alcoa] selftest OK cases={len(cases)}")
+    return 1 if fails else 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--staged", action="store_true", help="lint the index (pre-commit)")
     g.add_argument("--commit", metavar="HASH", help="lint one commit against its first parent")
+    g.add_argument("--selftest", action="store_true", help="run the R5 self-test on temp tracker files (no git) and exit")
     g.add_argument("--diff", metavar="FILE", help="lint a unified diff read from FILE (tests, other harnesses)")
     g.add_argument("--dump-config", action="store_true", help="print the default config as JSON and exit")
     ap.add_argument("--repo", default=None)
@@ -192,6 +248,8 @@ def main() -> int:
     if args.dump_config:
         print(json.dumps(DEFAULT_CONFIG, indent=2))
         return 0
+    if args.selftest:
+        return selftest()
     if args.config:
         with open(args.config, encoding="utf-8") as fh:
             apply_config(json.load(fh))
@@ -274,12 +332,11 @@ def main() -> int:
 
     if TRACKER in added:
         blob = git(repo, "show", f"{blob_ref}:{TRACKER}", check=False).stdout.decode("utf-8", "replace")
-        m = re.search(r'"updated_stamp"\s*:\s*"([^"]*)"', blob)
-        if not m or not STAMP.search(m.group(1)):
-            hits.append(f"[alcoa] {TRACKER}: R5 — top-level updated_stamp missing or not a "
-                        "(DDMonthYYYY/HH:MMAM/Model/Effort/Mode) stamp")
+        stamp, why = r5_stamp(blob)
+        if stamp is None:
+            hits.append(f"[alcoa] {TRACKER}: R5 — {why}")
         elif TRACKER in added and any('"updated_stamp"' in t for _, t in added[TRACKER]):
-            r6(TRACKER, 0, m.group(1))
+            r6(TRACKER, 0, stamp)
 
     for h in hits:
         print(h)

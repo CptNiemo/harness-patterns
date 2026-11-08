@@ -1,6 +1,6 @@
 # PROVENANCE
 
-Export #6 · 2026-11 · produced by an allowlist-driven, gated export from a private repository.
+Export #7 · 2026-11 · produced by an allowlist-driven, gated export from a private repository.
 No private history exists here: every file is a reviewed copy; this repository's own history is the only history.
 
 ## Gates at build (0 = passed)
@@ -55,7 +55,7 @@ No private history exists here: every file is a reviewed copy; this repository's
 - `patterns/pm-vocab-coach/files/references/glossary.md` `2a8e7b699b9ef6abb155a8b2ef5795204244e88e3f01a78292126cbf8441de2f`
 - `patterns/pm-vocab-coach/pattern.json` `170591ac1d8cc92f3b65cc2fd7a8d2af5c6069e5741040c718585e05645dbce6`
 - `patterns/record-lint/README.md` `36a07f213ba8b412b7c15b60e3d2f6fb7444129b46a76cd0d7f9bcff7c0f9798`
-- `patterns/record-lint/files/record-check.py` `54e42fa80c86ef9d74de086b687c49bdc8942eeffd322fbe2fb5610c32525171`
+- `patterns/record-lint/files/record-check.py` `e298bc5c044926348bf23167c0d6b898f600941f95c13dbf2aa938aaa7bb3087`
 - `patterns/record-lint/files/record-lint.example.json` `337f054397f2e64a1009449077c8e5aaaf278a672d1a2eff254d91a18b697a25`
 - `patterns/record-lint/pattern.json` `87a265c38175fae0dc53741850fd993b4b617b7ab0f0def0b8b13732ef897d6f`
 - `patterns/skill-packager/README.md` `fcaa04750f6cf2592e324aa2ac6ed0b47ba5876a99cdfcaaa88e5453b87b750f`
