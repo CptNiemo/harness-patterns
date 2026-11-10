@@ -1,6 +1,6 @@
 # PROVENANCE
 
-Export #7 · 2026-11 · produced by an allowlist-driven, gated export from a private repository.
+Export #8 · 2026-11 · produced by an allowlist-driven, gated export from a private repository.
 No private history exists here: every file is a reviewed copy; this repository's own history is the only history.
 
 ## Gates at build (0 = passed)
@@ -23,9 +23,9 @@ No private history exists here: every file is a reviewed copy; this repository's
 - `.githooks/pre-commit` `176ea9a2c22fddf56b380c76345ec437379394602c246e8c9d8193b578bbf371`
 - `.githooks/pre-merge-commit` `2ae5d9e29a33cc9bad43d26b44346484f8589e66178701796a95b0e76c0a11f3`
 - `.githooks/pre-push` `9511bde29dc30a4bb58c7043edd40622a3248d9b6e60e5312d488ba747c2177a`
-- `CATALOG.json` `3552f959a99b96d7175e3fa766428022603c53c4865f72f88fa832bceb906c7e`
+- `CATALOG.json` `d9dbd7935e91d8ba346f3a735e18a2241ce1b3fc7074e1eb88ab95711ed665de`
 - `LICENSE` `2d11a9fa8ca23f4a7022a4e0e1f13c2eb4b86a8509bd97262f71f08d8ccc7333`
-- `README.md` `25724197a70e3515908c1a5f5020dc599fa85dd17a1b979794df837237a12000`
+- `README.md` `e411a125b9c8ecfd24cc5e205121842b46c37d9cb30d142eae74cc30a56ced52`
 - `SECURITY.md` `85871152f5ddb7225ee4c30ae5bda2e2fb511bd97bdabb727a7a20026a3930a1`
 - `patterns/added-lines-gate/README.md` `d1430f58073cf849ad0fec78f41abb7ec8a28e09878fc9399ae249dc4e63d86a`
 - `patterns/added-lines-gate/files/pre-commit-block.sh` `47f9194f40b9720ccd3687514cdd07b6ad76b411a3742f9806dffc432114e7ff`
@@ -34,6 +34,10 @@ No private history exists here: every file is a reviewed copy; this repository's
 - `patterns/assert-or-die-lint/README.md` `3617d58be3e376eebd87b9560e5e216b2f37ce1f9053da7caf8ca9588526692c`
 - `patterns/assert-or-die-lint/files/lint-assert-or-die.sh` `6ce92c31f6f425c2fa018c8600d25b555958cf72909ba3c63edc735d0112fbb7`
 - `patterns/assert-or-die-lint/pattern.json` `fca862cf184e5a09a746bc8e379f0364bfd7d5c2186d614d57f35a3c42c5a4f7`
+- `patterns/autopilot-lanes/README.md` `6bc7add2ea418febb67230a1b4920d4753300225f9ddef51adfea392c79e8acd`
+- `patterns/autopilot-lanes/files/SKILL.md` `b36259978b29c7977680bc63f8fa898f1b6c1b39876442b58780829048b11bc4`
+- `patterns/autopilot-lanes/files/ap_queue.py` `90900e7878a1391b51a77fd76065ae70b775782bb9209eb10d8c8d0e6aa0d6e5`
+- `patterns/autopilot-lanes/pattern.json` `87f92db7f1522ac02ff0e91b3fecd913ab46ffaa56ec3b7c5e659ed55df893ab`
 - `patterns/closeout-continuity/README.md` `13846b948a10036a94334ece62f23312c5b3d409cf5150d1140e829ee72b4c8b`
 - `patterns/closeout-continuity/files/SKILL.md` `a10080f8b58901dd32730b2ca4e28e70cbd92fead4c447e4aaa3eec51a589727`
 - `patterns/closeout-continuity/pattern.json` `168bcf7cf1113f0e3a8fcd78a675ae12d2854c9ae2830cb099dd183fce34e9e7`

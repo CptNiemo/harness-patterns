@@ -37,6 +37,23 @@
     "retires": "the code review that asks 'does this script's green actually mean anything?'"
   },
   {
+    "id": "autopilot-lanes",
+    "name": "Autopilot lanes (unattended multi-model work queue)",
+    "summary": "a skill for sittings the owner has declared unattended: the strongest model scopes in-flight work into three lanes by model tier, writes one append-only queue file outside the repository that parallel sessions share, and every session works its own lane behind an inclusion test, an owner-only list that turns into ACTION lines, pathspec-only commits and a rule that only Lane A closes",
+    "status": "stable",
+    "version": "1.0.0",
+    "files": [
+      "patterns/autopilot-lanes/files/SKILL.md",
+      "patterns/autopilot-lanes/files/ap_queue.py"
+    ],
+    "requires": [
+      "python3 ≥ 3.9 for ap_queue.py",
+      "a project instruction file that names the model-tier policy, the owner-only classes, the session-start health check and the closeout ritual",
+      "a project tracker and continuity files to scope from (the closeout-continuity pattern produces them)"
+    ],
+    "retires": "the per-item 'what next?' turn and the per-item approval during a sitting the owner has declared unattended"
+  },
+  {
     "id": "closeout-continuity",
     "name": "Closeout → continuity loop (session ritual)",
     "summary": "an end-of-session skill: sweep loose ends, spot-check live state, write the continuity block (what landed with commit hashes, corrections, loose ends, TOMORROW FIRST), touch the state snapshot, update the tracker, stamp every record with author/model/time from the live clock, commit scoped — so the NEXT session reconstructs today from the repository alone",
