@@ -4,7 +4,8 @@
 # identity, secrets and crossing literals are re-checked on the exact blobs being committed. Exit 2 = refused.
 # 2026-11-06 (blind-review findings): identity is read as git will RECORD it, for author AND committer, so --author,
 # `git -c` and the GIT_* variables count; the name rule is the same for every commit (a handle, never an address or
-# hostname); type changes are included; the secret scan runs `gitleaks stdin` over the staged blobs, because
+# hostname); type changes are included; the secret scan reads the staged blobs itself (`gitleaks dir` over a copy
+# taken from the index, then `gitleaks stdin` for each .svg / .html, which the directory mode skips), because
 # `gitleaks git --pre-commit --staged` reads its own `git diff`, which `color.ui=always` blinds (exit 1 -> 0, tested).
 # The lint's address rules make the old separate added-lines grep redundant; it is gone.
 # 2026-11-07: the identity regexes moved to tools/identity.rules (one copy for every reader).
@@ -45,6 +46,17 @@ git checkout-index -z --stdin --prefix="$TMP/tree/" < "$TMP/staged.z" || { echo 
 ( cd "$TMP" && gitleaks dir "$TMP/tree" -v --redact --no-banner --no-color --ignore-gitleaks-allow --config "$ROOT/tools/gitleaks.toml" ) \
     > "$TMP/gitleaks.out" 2> "$TMP/gitleaks.err" \
     || { echo "pre-commit: gitleaks refused the staged blobs (a secret, or it could not run):" >&2; head -n 12 "$TMP/gitleaks.out" "$TMP/gitleaks.err" >&2; exit 2; }
+# `gitleaks dir` skips some paths by the default ruleset's path allowlist — every *.svg among them (measured with a
+# planted token, gitleaks 8.30.1: reported in a .html and a .md, not in a .svg). Each staged .svg / .html blob is
+# therefore ALSO fed to `gitleaks stdin`, which has no path to skip. Same exit rule: a finding refuses, and so does a
+# scanner that could not run.
+while IFS= read -r -d '' p; do
+    case "${p,,}" in *.svg|*.html) ;; *) continue ;; esac
+    if [ -L "$TMP/tree/$p" ] || [ ! -f "$TMP/tree/$p" ]; then continue; fi   # a staged link or submodule is not a file to read
+    ( cd "$TMP" && gitleaks stdin --redact --no-banner --no-color --ignore-gitleaks-allow --config "$ROOT/tools/gitleaks.toml" < "$TMP/tree/$p" ) \
+        > "$TMP/gitleaks.out" 2> "$TMP/gitleaks.err" \
+        || { echo "pre-commit: gitleaks refused the staged file '$p' (a secret, or it could not run):" >&2; head -n 12 "$TMP/gitleaks.out" "$TMP/gitleaks.err" >&2; exit 2; }
+done < "$TMP/staged.z"
 # crossing lint over the staged blobs, public shape rules only (the identity list is private to the lane); its address
 # rules cover RFC 1918 and carrier-grade ranges over the WHOLE blob, so no separate address grep is needed. Exit 1 = a
 # hit, 2 = the lint could not run — both refuse, each with its own reason.

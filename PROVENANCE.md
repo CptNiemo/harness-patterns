@@ -1,6 +1,6 @@
 # PROVENANCE
 
-Export #8 · 2026-11 · produced by an allowlist-driven, gated export from a private repository.
+Export #9 · 2026-11 · produced by an allowlist-driven, gated export from a private repository.
 No private history exists here: every file is a reviewed copy; this repository's own history is the only history.
 
 ## Gates at build (0 = passed)
@@ -20,13 +20,13 @@ No private history exists here: every file is a reviewed copy; this repository's
 
 - `.gitattributes` `cb7035f1e58e29682cd8d6e1e5fe0077ba7f55fc369278aca251cf0c3052670b`
 - `.githooks/commit-msg` `c36c6ade37501acbac1173bfac6931fec8222691575637b4c6597c8622ae31b0`
-- `.githooks/pre-commit` `176ea9a2c22fddf56b380c76345ec437379394602c246e8c9d8193b578bbf371`
+- `.githooks/pre-commit` `553ffeae38b3828da70118265f5cf39103af6b2e947f0fedf6b4b73b4c914d28`
 - `.githooks/pre-merge-commit` `2ae5d9e29a33cc9bad43d26b44346484f8589e66178701796a95b0e76c0a11f3`
 - `.githooks/pre-push` `9511bde29dc30a4bb58c7043edd40622a3248d9b6e60e5312d488ba747c2177a`
-- `CATALOG.json` `d9dbd7935e91d8ba346f3a735e18a2241ce1b3fc7074e1eb88ab95711ed665de`
+- `CATALOG.json` `73a4ddce12b6196284d6693d0aa870c2c74e382daa1bf0dbc4aaa2a484ec0ff8`
 - `LICENSE` `2d11a9fa8ca23f4a7022a4e0e1f13c2eb4b86a8509bd97262f71f08d8ccc7333`
-- `README.md` `e411a125b9c8ecfd24cc5e205121842b46c37d9cb30d142eae74cc30a56ced52`
-- `SECURITY.md` `85871152f5ddb7225ee4c30ae5bda2e2fb511bd97bdabb727a7a20026a3930a1`
+- `README.md` `828620caef0151353a0e36a2ca430b05fd5ccbc55a59ea5986c3be041336da5a`
+- `SECURITY.md` `78f1f703e7b2cdc11e71c284bba15e7b29337e3b6f5dab5be9c141860a823e39`
 - `patterns/added-lines-gate/README.md` `d1430f58073cf849ad0fec78f41abb7ec8a28e09878fc9399ae249dc4e63d86a`
 - `patterns/added-lines-gate/files/pre-commit-block.sh` `47f9194f40b9720ccd3687514cdd07b6ad76b411a3742f9806dffc432114e7ff`
 - `patterns/added-lines-gate/files/pre-commit-gitleaks-block.sh` `f3c065ac5dba3ea83a0330d65b72d61ddb8896fefb3cb5b3eb273b5a9675eb85`
@@ -68,6 +68,19 @@ No private history exists here: every file is a reviewed copy; this repository's
 - `patterns/web-triage-cell/README.md` `307860042f8a7dc657fa04e56acba5da7e0974eaf83144d21a8be1e2e8f0f0c8`
 - `patterns/web-triage-cell/files/web-triage.md` `46196aa445ad53bedb15b4d49847ddfdbdae28b5f2dd9162a6b1caf5264b9ad8`
 - `patterns/web-triage-cell/pattern.json` `36898a4a0e1a5852c78a9536e7a53cb7ab12d7ce8570cadb6aa90eb335227104`
+- `patterns/wormhole-walkthrough/README.md` `daf7d690dce6575ebc3167e5f7bbfd46124f39590ef77fec585e3a02ce432480`
+- `patterns/wormhole-walkthrough/files/build_plates.py` `139b79f07b5f8786ebeef9c423268de998d2d0aadc664b47c87ae270f1eecf93`
+- `patterns/wormhole-walkthrough/files/image-plate-recipe/prompts.md` `06463b77b00961535aa46e8243c542bf2c79794fd85c365d90aa82aa2e79c83f`
+- `patterns/wormhole-walkthrough/files/plates/plate-1-overview.svg` `c4921d6f2d4c3dc7b21fe56637621370000f599a13691e277e00952a27980ce9`
+- `patterns/wormhole-walkthrough/files/plates/plate-2-drilldown.svg` `5698660a590c77153b2431bdd30cb2ed6c9eaba315dabfb25b536e73f7ed27fb`
+- `patterns/wormhole-walkthrough/files/plates/plate-3-wormhole.svg` `39ed9d5ef9448edec2f7b0e96876d64346050ce00cb0d10c301a456db90d30f7`
+- `patterns/wormhole-walkthrough/files/plates/plate-4-filter.svg` `272956bbd5ccf14a2dad028f07ebdc416b14437a7da142482e732925ba29a6c9`
+- `patterns/wormhole-walkthrough/files/plates/plate-5-components.svg` `6eac07dc7792bca853dc5b24e9a8d2f5e80b38002801bd1fcba8a79c4c95c497`
+- `patterns/wormhole-walkthrough/files/plates/plate-6-overview-dark.svg` `b1e646f48f7856b2e5f73f62e41a04722c1bf981562a446f23c06cfccd3ad112`
+- `patterns/wormhole-walkthrough/files/slots.json` `1cbff1e6114513881002ba949de85170bf74cda98da7a89f37b50b40d9ad617b`
+- `patterns/wormhole-walkthrough/files/tokens.json` `901a71d252fc210617c67f451d320df01978771aa4eda298cfd305237f460a15`
+- `patterns/wormhole-walkthrough/files/walkthrough.html` `1bb615ebf744c422deee0d38acd0512ac16e35bb725727bd0fb507646ea8e8c8`
+- `patterns/wormhole-walkthrough/pattern.json` `7e175e737c61ca39c73c900083c39817617f0e52f5261c4fa5c72a44860c3607`
 - `tools/crossing-lint.sh` `4a469adb94e1de99e57490aa5afca25ab9f8a831cf0f8cb3522b9e5cb8de22ab`
 - `tools/gate-generic.rules` `cf3de4b03feeaa63cdcc8ed463979f8b91dd5da41c97462638593f352f4cc346`
 - `tools/gitleaks.toml` `0b3a621cd209e470d35aacf5291052ed2fedb1abbf6f5435eead9ef8ca090e18`

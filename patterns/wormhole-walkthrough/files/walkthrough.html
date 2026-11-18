@@ -1,0 +1,1739 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Walkthrough</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg, #F6F5F2); }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  #stage { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; }
+  @supports (height: 100dvh) { #stage { height: 100dvh; } }
+  /* A narrow phone held upright: turn the 16:9 stage on its side so it fills the screen. */
+  @media (orientation: portrait) and (max-width: 700px) {
+    #stage { width: 100vh; height: 100vw; transform-origin: top left;
+             transform: rotate(90deg) translateY(-100%); }
+    @supports (height: 100dvh) { #stage { width: 100dvh; } }
+  }
+  svg { width: 100%; height: 100%; display: block; -webkit-user-select: none; user-select: none;
+        -webkit-tap-highlight-color: transparent; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  text { fill: var(--ink); pointer-events: none; }
+  .t-title { font-size: 34px; font-weight: 600; }
+  .t-layer { font-size: 22px; font-weight: 500; transition: opacity .4s; }
+  .t-item { font-size: 19px; }
+  .t-small { font-size: 18px; fill: var(--dim); }
+  .t-cap { font-size: 30px; font-weight: 500; }
+  .t-detail { font-size: 22px; fill: var(--dim); }
+  .t-stop { font-size: 17px; font-weight: 700; text-anchor: middle; }
+  .t-legend { font-size: 18px; }
+  .t-filter { font-size: 22px; font-weight: 600; }
+
+  .bg { fill: var(--bg); }
+  .fade { transition: opacity .45s ease; }
+  .plane-shadow { fill: var(--shadow); opacity: var(--shadow-op); }
+  .plane-face { stroke: var(--plane-edge); stroke-width: 1.5; transition: stroke .4s, stroke-width .4s; }
+  .plane.is-focus .plane-face { stroke: var(--line); stroke-width: 2.5; }
+  .halo { fill: var(--panel); stroke: var(--plane-edge); stroke-width: 1.5; opacity: 0; }
+  .halo.on { opacity: .55; }
+  .band { fill: var(--band); stroke: var(--line); stroke-width: 2; }
+  .band-on { fill: var(--teal); opacity: 0; }
+  .band-on.on { opacity: 1; }
+  .tree { stroke: var(--tree); stroke-width: 2; stroke-linecap: round; fill: none; }
+  .tree-dot { fill: var(--tree); }
+  .is-faint { opacity: .28; }
+  .stop-path { fill: none; stroke: var(--tree); stroke-width: 3; stroke-linecap: round;
+               stroke-dasharray: .1 11; opacity: .75; }
+
+  .item { cursor: pointer; outline: none;
+          transition: transform .6s cubic-bezier(.4, 0, .2, 1), opacity .45s ease; }
+  .item .shape { fill: var(--node); stroke: var(--line); stroke-width: 2;
+                 transition: fill .4s, stroke .4s, stroke-width .4s; }
+  .item.is-active .shape { fill: var(--teal-fill); stroke: var(--teal); stroke-width: 2.5; }
+  .item.is-selected .shape { fill: var(--amber-fill); stroke: var(--amber); stroke-width: 3; }
+  .item.is-dim { opacity: .28; }
+  .mode-filter .item.is-dim { opacity: .14; }
+  .chip { fill: var(--chip); transition: fill .4s; }
+  .chip.on { fill: var(--teal); }
+  .chip-hit { fill: transparent; cursor: pointer; }
+  .ring { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 5 5; opacity: 0; pointer-events: none; }
+  .item:focus-visible .ring, .legend:focus-visible .ring, .stop:focus-visible .ring,
+  .gate:focus-visible .ring, .ride:focus-visible .ring { opacity: 1; }
+
+  .ghostable { transition: opacity .5s ease, transform .5s ease; }
+  .mode-filter .ghostable { opacity: .5; }
+  .panel-g { opacity: 0; pointer-events: none; transition: opacity .5s ease; }
+  .mode-filter .panel-g { opacity: 1; }
+  .panel-shadow { fill: var(--shadow); opacity: var(--shadow-op); }
+  .panel { fill: var(--panel); stroke: var(--plane-edge); stroke-width: 1.5; }
+  .panel-chip { fill: var(--teal); }
+
+  .tubes { transition: opacity .45s ease; pointer-events: none; }
+  .mode-filter .tubes, .mode-filter .gate { opacity: 0; pointer-events: none; }
+  .tube path { fill: none; stroke: var(--teal); stroke-linecap: round; }
+  .tube .w1 { stroke-opacity: .16; stroke-width: 18; }
+  .tube .w2 { stroke-opacity: .22; stroke-width: 10; }
+  .tube .w3 { stroke-opacity: .9; stroke-width: 2; }
+  .tube .start { fill: var(--bg); stroke: var(--teal); stroke-width: 2; }
+  .tube .head-soft { fill: var(--teal); fill-opacity: .22; }
+  .tube .head { fill: var(--teal); }
+  .feed { fill: none; stroke: var(--teal); stroke-width: 2.5; stroke-linecap: round; transition: opacity .5s ease; }
+
+  .gate { cursor: pointer; outline: none; transition: opacity .45s ease; }
+  .gate .diamond { fill: var(--bg); stroke: var(--teal); stroke-width: 2.5; stroke-linejoin: round; transition: fill .4s; }
+  .gate .bar { stroke: var(--teal); stroke-width: 2.5; stroke-linecap: round; transition: stroke .4s; }
+  .gate.is-approved .diamond { fill: var(--teal); }
+  .gate.is-approved .bar { stroke: var(--bg); }
+  .gate .pulse { fill: none; stroke: var(--teal); stroke-width: 2; opacity: 0;
+                 transform-box: fill-box; transform-origin: center; }
+  .gate.is-waiting .pulse { animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 0% { opacity: .55; transform: scale(.7); } 70% { opacity: 0; transform: scale(1.5); }
+                     100% { opacity: 0; transform: scale(1.5); } }
+
+  .stop { cursor: pointer; outline: none; transition: transform .6s cubic-bezier(.4, 0, .2, 1); }
+  .stop .dot { fill: var(--bg); stroke: var(--line); stroke-width: 2; transition: fill .3s; }
+  .stop.is-current .dot { fill: var(--ink); }
+  .stop.is-current text { fill: var(--bg); }
+
+  .legend { cursor: pointer; outline: none; }
+  .legend .pill { fill: var(--node); stroke: var(--chip); stroke-width: 1.5; transition: fill .4s, stroke .4s; }
+  .legend .swatch { fill: var(--chip); transition: fill .4s; }
+  .legend.on .pill { fill: var(--teal-fill); stroke: var(--teal); }
+  .legend.on .swatch { fill: var(--teal); }
+
+
+  /* ---- v2: the ride, the tunnel and the map view --------------------------- */
+  .memb { fill: none; stroke: var(--teal); stroke-width: 1.2; opacity: 0; pointer-events: none; }
+  [data-skin=calm] .memb { display: none; }
+  .item.is-far { opacity: .5; }
+  .mapping .item { transition: opacity .45s ease; }
+  .ride { cursor: pointer; outline: none; transition: opacity .35s ease; }
+  .ride path { fill: none; stroke: var(--teal); stroke-linecap: round; stroke-dasharray: 90 90;
+               stroke-dashoffset: 52; transition: stroke-dashoffset .3s ease; }
+  .ride .w1 { stroke-opacity: .16; stroke-width: 18; }
+  .ride .w2 { stroke-opacity: .22; stroke-width: 10; }
+  .ride .w3 { stroke-opacity: .9; stroke-width: 2; }
+  .ride .head-soft { fill: var(--teal); fill-opacity: .22; }
+  .ride .head { fill: var(--teal); }
+  .ride .heads { transition: transform .3s ease; transform: translate(-40px, 6px); }
+  .ride.is-go path { stroke-dashoffset: 0; }
+  .ride.is-go .heads { transform: translate(0, 0); }
+  .ride .breath { transform-box: fill-box; transform-origin: center; animation: beat 2.6s ease-in-out infinite; }
+  @keyframes beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+  .tunnel-ring { fill: none; stroke: var(--teal); pointer-events: none; }
+  .map-links { opacity: 0; transition: opacity .6s ease; pointer-events: none; }
+  .map-on .map-links { opacity: 1; }
+  .mlink { stroke: var(--tree); stroke-width: 1.5; stroke-linecap: round; opacity: .32;
+           transition: opacity .4s, stroke .4s; }
+  .mlink.is-hot { stroke: var(--teal); stroke-width: 3; opacity: .8; }
+  .mpulse { fill: var(--teal); }
+  .mode-map .ghostable { opacity: 0; transform: scale(1.22);
+                         transition: opacity .8s ease, transform .9s cubic-bezier(.5, 0, .8, .4); }
+  .mode-map .tubes, .mode-map .gate:not(.map-gate):not(.sys-gate), .mode-map .panel-g, .mode-map .ride { opacity: 0; pointer-events: none; }
+  .mode-map .t-layer, .mode-map .t-conn { opacity: 0; }
+  .t-conn { transition: opacity .4s; }
+  .mode-map .chip-hit { display: none; }
+
+  /* ---- v3: the systems view ------------------------------------------------- */
+  .sys-g { opacity: 0; pointer-events: none; transition: opacity .6s ease; }
+  .mode-sys .sys-g { opacity: 1; pointer-events: auto; }
+  .sysp { cursor: pointer; outline: none; transition: opacity .5s ease; }
+  .sysp * { vector-effect: non-scaling-stroke; }
+  .sysp-frame { fill: var(--panel); stroke: var(--plane-edge); stroke-width: 1.5; transition: stroke .4s; }
+  .sysp.is-focus .sysp-frame { stroke: var(--line); stroke-width: 2; }
+  .sysp.is-rail { opacity: .82; }
+  .sysp:focus-visible > .ring, .sys-head:focus-visible .ring { opacity: 1; }
+  .t-sys { font-size: 17px; font-weight: 600; }
+  .t-ride { font-size: 13px; text-anchor: middle; }
+  .sy-l { stroke: var(--tree); stroke-width: 1.5; fill: none; opacity: .7; }
+  .sy-l2 { stroke: var(--line); stroke-width: 2.5; fill: none; }
+  .sy-o { fill: none; stroke: var(--tree); stroke-width: 1.5; opacity: .8; }
+  .sy-c { fill: var(--panel); stroke: var(--tree); stroke-width: 1.5; }
+  .sy-s { fill: var(--plane0); }
+  .sy-f { fill: var(--chip); opacity: .6; }
+  .sy-a { fill: var(--teal); opacity: .75; }
+  .sy-w { fill: var(--amber); opacity: .85; }
+  .echo { fill: var(--node); stroke: var(--teal); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: .6;
+          cursor: pointer; transition: opacity .45s ease; }
+  .echo.is-off { opacity: 0; pointer-events: none; }
+  .sys-tubes { opacity: 0; pointer-events: none; transition: opacity .5s ease; }
+  .mode-sys .sys-tubes { opacity: 1; }
+  .stube path { fill: none; stroke: var(--teal); stroke-linecap: round; }
+  .stube .w1 { stroke-opacity: .16; stroke-width: 12; display: none; }
+  .stube .w2 { stroke-opacity: .22; stroke-width: 6; display: none; }
+  .stube .w3 { stroke-opacity: .3; stroke-width: 1.5; }
+  .stube.is-hot .w1, .stube.is-hot .w2 { display: inline; }
+  .stube.is-hot .w3 { stroke-opacity: .9; stroke-width: 2; }
+  .sys-head { outline: none; }
+  .sys-head .head-soft { fill: var(--teal); fill-opacity: .22; transform-box: fill-box; transform-origin: center; }
+  .sys-head .head { fill: var(--teal); }
+  .mode-sys .sys-head.is-ready { pointer-events: auto; cursor: pointer; }
+  .sys-head.is-ready .head-soft { animation: beat 2.6s ease-in-out infinite; }
+  .ride-sys .heads { transform: translate(-40px, -10px); }
+  .ride-sys.in-map .heads { transform: none; }
+  .ride-sys.in-map path { stroke-dashoffset: 0; }
+  .mode-map .ride.ride-sys.in-map { opacity: 1; pointer-events: auto; }
+  [data-skin=vital] .sysp-frame { animation: breathe-soft 6s ease-in-out infinite; }
+  [data-skin=vital] .t-sys, [data-skin=vital] .t-ride {
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    text-transform: uppercase; letter-spacing: .09em; }
+  [data-skin=vital] .t-sys { font-size: 14px; }
+  [data-skin=vital] .t-ride { font-size: 11px; }
+
+  /* ---- v2: the "vital" skin ------------------------------------------------ */
+  [data-skin=vital] .t-layer, [data-skin=vital] .t-small, [data-skin=vital] .t-legend,
+  [data-skin=vital] .t-item, [data-skin=vital] .t-detail, [data-skin=vital] .t-filter {
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    text-transform: uppercase; letter-spacing: .09em; }
+  [data-skin=vital] .t-item { font-size: 15px; }
+  [data-skin=vital] .t-layer { font-size: 17px; }
+  [data-skin=vital] .t-legend { font-size: 14px; }
+  [data-skin=vital] .t-small { font-size: 14px; }
+  [data-skin=vital] .t-detail { font-size: 17px; }
+  [data-skin=vital] .t-filter { font-size: 18px; }
+  [data-skin=vital] .t-title { font-weight: 500; letter-spacing: -.01em; }
+  [data-skin=vital] .item .main { transform-box: fill-box; transform-origin: center;
+                                  animation: breathe 5.6s ease-in-out infinite; }
+  [data-skin=vital] .plane-face { animation: breathe-soft 6s ease-in-out infinite; }
+  @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.022); opacity: .9; } }
+  @keyframes breathe-soft { 0%, 100% { opacity: 1; } 50% { opacity: .8; } }
+  [data-skin=vital] .tube .w1 { filter: url(#soft); stroke-opacity: .3; }
+  .tube .w4 { fill: none; stroke: #fff; stroke-opacity: 0; stroke-width: 3; stroke-linecap: round;
+              stroke-dasharray: 36 520; }
+  [data-skin=vital] .tube.is-full .w4 { stroke-opacity: .32; animation: sheen 3.8s linear infinite; }
+  @keyframes sheen { from { stroke-dashoffset: 556; } to { stroke-dashoffset: 0; } }
+  [data-skin=vital] .gate.is-waiting .pulse { animation-duration: 2.6s; }
+  [data-skin=vital] .mlink.is-hot { stroke-width: 4; opacity: .55; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+    .gate.is-waiting .pulse { opacity: .5; }
+  }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="live" class="sr" aria-live="polite"></div>
+<script>
+/* ---------------------------------------------------------------------------
+   HOW TO LOAD REAL CONTENT
+   Edit the CONTENT object below and nothing else. Every word shown on the page
+   comes from it: the title, the three layer names, the twelve item labels, the
+   five tag names and the six stop captions. The layout (LAYOUT) and the look
+   (TOKENS) are the same data that drew the still plates, so positions match.
+   The same picture also stands for modular systems (items) joined by
+   connectors (the tubes), with an approval checkpoint (the gate) on a link.
+   Interactions: open an item, pick a tag, step through the stops, and ride an
+   open item's link into the map view (the same items, arranged by connection)
+   or into the systems view (the same items, placed in six generic systems).
+   CONTENT.systems names the six systems and says which items live in which,
+   which system pairs are linked, and which link carries the gate. The six
+   panels are generic types on purpose: relabel them, do not redraw them.
+   Keys: Right / Left / Space step the stops, 1 to 9 jump, Enter or j rides in
+   and out, Escape goes back one level, d flips light/dark, t flips the skin.
+   THEME below picks the starting skin: "vital" or "calm".
+--------------------------------------------------------------------------- */
+const THEME = "vital";
+
+const CONTENT = {
+  title: "Two ways to find things, working together",
+  layers: { base: "Shared base", group: "Group", personal: "Personal" },
+  connector: "Connector",
+  kinds: { folder: "Folder", file: "File" },
+  items: {
+    b1: "Item A1", b2: "Item B1", b3: "Item C1", b4: "Item D1",
+    g1: "Item A2", g2: "Item B2", g3: "Item C2", g4: "Item D2",
+    u1: "Item A3", u2: "Item B3", u3: "Item C3", u4: "Item D3"
+  },
+  tags: { t1: "Tag one", t2: "Tag two", t3: "Tag three", t4: "Tag four", t5: "Tag five" },
+  stops: [
+    "Every item has one home in the tree.",
+    "Three layers stack: a shared base, a group layer and a personal layer.",
+    "Open a branch to see what lives in it, layer by layer.",
+    "Pick a tag and matching items link up across branches and layers.",
+    "A gate holds a link until a person approves the crossing.",
+    "Filter: the matching items gather into one tidy view.",
+    "The same items, seen by connection.",
+    "Where each item lives across systems.",
+    "Following one item between systems."
+  ],
+  systems: {
+    names: { sA: "System A: grid sheet", sB: "System B: document library", sC: "System C: data pipeline",
+             sD: "System D: customer record", sE: "System E: ticket queue", sF: "System F: ledger" },
+    /* kind picks the drawing: grid | library | pipeline | record | queue | ledger */
+    kinds: { sA: "grid", sB: "library", sC: "pipeline", sD: "record", sE: "queue", sF: "ledger" },
+    /* which items appear in each system (at most four per system) */
+    members: { sA: ["b1", "g1", "b4", "u3"], sB: ["b2", "u1", "g2"], sC: ["g3", "u3", "b1", "b3"],
+               sD: ["g4", "u4", "g1", "u1"], sE: ["g2", "u2", "g4", "u3"], sF: ["b3", "b4", "u4"] },
+    /* where each item is drawn as the real element; elsewhere it shows as an echo */
+    home: { b1: "sA", g1: "sA", b2: "sB", u1: "sB", g3: "sC", u3: "sC",
+            g4: "sD", u4: "sD", g2: "sE", u2: "sE", b3: "sF", b4: "sF" },
+    /* system-to-system links; one carries the approval gate */
+    links: [ { a: "sA", b: "sC" }, { a: "sC", b: "sF" }, { a: "sA", b: "sF" }, { a: "sA", b: "sD" },
+             { a: "sB", b: "sE" }, { a: "sD", b: "sE" }, { a: "sB", b: "sD" }, { a: "sC", b: "sE", gated: true },
+             { a: "sA", b: "sE" }, { a: "sD", b: "sF" } ],
+    /* the ride that stop 9 plays */
+    demo: { item: "u3", from: "sC", to: "sE" }
+  },
+  ui: {
+    hint: "Open an item, pick a tag, or step through the stops.",
+    layerWord: "layer",
+    tagsWord: "Tags",
+    itemsWord: "items",
+    stopWord: "Stop",
+    waiting: "waiting for approval at the gate",
+    approved: "approved",
+    approve: "Approve this link",
+    pickTag: "Pick tag",
+    ride: "Ride this link to the map view",
+    linksWord: "links",
+    mapHint: "Pick another item to re-centre, or click empty space to return.",
+    approveMap: "Approve this connection",
+    rideMapWord: "Connections",
+    rideSysWord: "Systems",
+    rideSys: "Ride this link to the systems view",
+    rideTo: "Ride to",
+    sysWord: "systems",
+    sysHint: "Pick a system, then an item, and follow a link to ride between systems.",
+    approveSys: "Approve this system link"
+  }
+};
+
+/* Same numbers as build_plates.py (canvas 1920 x 1080). */
+const LAYOUT = {
+  W: 1920, H: 1080,
+  plane: { x: 200, w: 1520, h: 230, skew: -10, r: 18 },
+  layers: [ { id: "base", y: 670 }, { id: "group", y: 400 }, { id: "personal", y: 130 } ],
+  rowY: { base: 785, group: 515, personal: 245 },
+  colX: { 1: 480, 2: 820, 3: 1160, 4: 1500 },
+  folder: [160, 72], file: [132, 60], chip: [30, 10],
+  band: { x: 104, y: 130, w: 20, h: 770 },
+  items: [
+    ["b1", "folder", "base", 1, ["t2", "t3"]], ["b2", "folder", "base", 2, ["t3", "t4"]],
+    ["b3", "folder", "base", 3, ["t1", "t5"]], ["b4", "folder", "base", 4, ["t2", "t4", "t5"]],
+    ["g1", "folder", "group", 1, ["t3", "t5"]], ["g2", "file", "group", 2, ["t1", "t4"]],
+    ["g3", "folder", "group", 3, ["t2", "t3", "t4"]], ["g4", "file", "group", 4, ["t1", "t2"]],
+    ["u1", "file", "personal", 1, ["t1", "t3"]], ["u2", "file", "personal", 2, ["t2", "t5"]],
+    ["u3", "file", "personal", 3, ["t4", "t5"]], ["u4", "file", "personal", 4, ["t3", "t4"]]
+  ],
+  tagOrder: ["t1", "t2", "t3", "t4", "t5"],
+  demoTag: "t1", demoItem: "u3",
+  tuned: { t1: { chain: ["u1", "g2", "b3", "g4"], gate: 1,
+                 ctrl: [[[600, 110], [780, 300]], [[960, 380], [1120, 560]], [[1320, 700], [1400, 420]]] } },
+  stops: [[650, 708], [990, 708], [1330, 708], [1330, 438], [990, 438], [650, 438],
+          [650, 168], [990, 168], [1330, 168]],
+  mapStops: { x: 1340, y: 1000, gap: 54 },
+  map: { c: [960, 505], r1: [430, 235], r2: [760, 345], rMin: 30, rMax: 56, gateIndex: 1 },
+  stopR: 17,
+  pathD: "M 330 708 L 1666 708 Q 1690 708 1690 684 L 1690 462 Q 1690 438 1666 438 " +
+         "L 354 438 Q 330 438 330 414 L 330 192 Q 330 168 354 168 L 1690 168",
+  trunkY: 880,
+  filterRow: { y: 540, gap: 240, panel: [440, 420, 1040, 240] }
+};
+
+const TOKENS = {
+  calm: {
+    light: { bg: "#F6F5F2", ink: "#2B2F36", dim: "#8A8F98", line: "#2B2F36", tree: "#8A8F98", chip: "#C9CCD1",
+             plane: ["#E4E3DF", "#EAE9E5", "#F0EFEB"], planeEdge: "#C9CCD1", node: "#FFFFFF",
+             band: "#C9CCD1", teal: "#0F8B8D", amber: "#E8A33D", amberFill: "#FDF3E1",
+             tealFill: "#E7F3F3", panel: "#FFFFFF", shadow: "#2B2F36", shadowOp: 0.07 },
+    dark:  { bg: "#14171C", ink: "#D7DAE0", dim: "#8A8F98", line: "#D7DAE0", tree: "#8A8F98", chip: "#565D69",
+             plane: ["#1B1F26", "#20252D", "#252B34"], planeEdge: "#3A414C", node: "#2A303A",
+             band: "#565D69", teal: "#2BB3B5", amber: "#E8A33D", amberFill: "#3A2F1C",
+             tealFill: "#173436", panel: "#2A303A", shadow: "#000000", shadowOp: 0.25 }
+  },
+  vital: {
+    dark:  { bg: "#0e0f10", ink: "#e8e6e1", dim: "#a3a4a6", line: "#565b62", tree: "#4a4e55", chip: "#3a3d42",
+             plane: ["#151618", "#191b1d", "#1d1f22"], planeEdge: "#2a2d31", node: "#1d1f22",
+             band: "#2a2d31", teal: "#39d98a", amber: "#d98a2b", amberFill: "#2b2114",
+             tealFill: "#12281e", panel: "#151618", shadow: "#000000", shadowOp: 0.35 },
+    light: { bg: "#F6F5F2", ink: "#1d1f22", dim: "#6b6f76", line: "#3a3d42", tree: "#9a9da3", chip: "#cfd1d4",
+             plane: ["#ECEBE7", "#F0EFEB", "#F4F3EF"], planeEdge: "#d5d6d3", node: "#FFFFFF",
+             band: "#cfd1d4", teal: "#1fa56a", amber: "#d98a2b", amberFill: "#fbf0df",
+             tealFill: "#e3f4ec", panel: "#FFFFFF", shadow: "#1d1f22", shadowOp: 0.06 }
+  },
+  radius: 12, line: 2, unit: 8
+};
+
+(function () {
+  "use strict";
+  const NS = "http://www.w3.org/2000/svg";
+  const L = LAYOUT;
+  const reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  /* ---- theme: CSS variables written from TOKENS -------------------------- */
+  function vars(P) {
+    return "--bg:" + P.bg + ";--ink:" + P.ink + ";--dim:" + P.dim + ";--line:" + P.line + ";--tree:" + P.tree +
+      ";--chip:" + P.chip +
+      ";--plane0:" + P.plane[0] + ";--plane1:" + P.plane[1] + ";--plane2:" + P.plane[2] +
+      ";--plane-edge:" + P.planeEdge + ";--node:" + P.node + ";--band:" + P.band +
+      ";--teal:" + P.teal + ";--amber:" + P.amber + ";--amber-fill:" + P.amberFill +
+      ";--teal-fill:" + P.tealFill + ";--panel:" + P.panel + ";--shadow:" + P.shadow +
+      ";--shadow-op:" + P.shadowOp + ";";
+  }
+  const root = document.documentElement;
+  const st = document.createElement("style");
+  let css = "";
+  ["calm", "vital"].forEach(function (sk) {
+    ["light", "dark"].forEach(function (m) {
+      css += ":root[data-skin=" + sk + "][data-theme=" + m + "]{" + vars(TOKENS[sk][m]) + "}";
+    });
+  });
+  st.textContent = css;
+  document.head.appendChild(st);
+  const startSkin = THEME === "calm" ? "calm" : "vital";
+  const prefersDark = !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  root.setAttribute("data-skin", startSkin);
+  root.setAttribute("data-theme", startSkin === "vital" ? "dark" : (prefersDark ? "dark" : "light"));
+  function flipTheme() {
+    root.setAttribute("data-theme", root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  }
+  function flipSkin() {
+    root.setAttribute("data-skin", root.getAttribute("data-skin") === "vital" ? "calm" : "vital");
+    relayoutText();
+  }
+
+  /* ---- small helpers ------------------------------------------------------ */
+  function el(name, attrs, parent) {
+    const e = document.createElementNS(NS, name);
+    if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function rect(parent, x, y, w, h, r, cls) {
+    return el("rect", { x: x, y: y, width: w, height: h, rx: r, "class": cls || "" }, parent);
+  }
+  function text(parent, x, y, cls, str) {
+    const t = el("text", { x: x, y: y, "class": cls }, parent);
+    t.textContent = str;
+    return t;
+  }
+  function button(g, label) {
+    g.setAttribute("tabindex", "0");
+    g.setAttribute("role", "button");
+    g.setAttribute("aria-label", label);
+  }
+  function bez(u0, c1, c2, u3, t) {
+    const m = 1 - t;
+    return [m * m * m * u0[0] + 3 * m * m * t * c1[0] + 3 * m * t * t * c2[0] + t * t * t * u3[0],
+            m * m * m * u0[1] + 3 * m * m * t * c1[1] + 3 * m * t * t * c2[1] + t * t * t * u3[1]];
+  }
+  function ease(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function clamp01(t) { return t < 0 ? 0 : (t > 1 ? 1 : t); }
+  function measure(t, str) {
+    let w = 0;
+    try { w = t.getComputedTextLength(); } catch (e) { w = 0; }
+    return w || String(str).length * 10;
+  }
+
+  /* ---- items from the layout --------------------------------------------- */
+  const IT = {};
+  const ORDER = [];
+  L.items.forEach(function (i) {
+    const size = i[1] === "folder" ? L.folder : L.file;
+    const cx = L.colX[i[3]], cy = L.rowY[i[2]];
+    IT[i[0]] = { id: i[0], kind: i[1], layer: i[2], branch: i[3], tags: i[4],
+                 cx: cx, cy: cy, w: size[0], h: size[1], x: cx - size[0] / 2, y: cy - size[1] / 2 };
+    ORDER.push(i[0]);
+  });
+  const ROW_RANK = { personal: 0, group: 1, base: 2 };
+
+  /* ---- the map view: who shares a tag with whom ---------------------------- */
+  const SHARE = {}, LINKS = [], DEG = {};
+  ORDER.forEach(function (id) { SHARE[id] = {}; DEG[id] = 0; });
+  for (let i = 0; i < ORDER.length; i++) {
+    for (let j = i + 1; j < ORDER.length; j++) {
+      const a = ORDER[i], b = ORDER[j];
+      const common = IT[a].tags.filter(function (t) { return IT[b].tags.indexOf(t) >= 0; });
+      if (common.length) {
+        SHARE[a][b] = common; SHARE[b][a] = common; DEG[a]++; DEG[b]++;
+        LINKS.push({ a: a, b: b, tags: common, line: null, pulse: null });
+      }
+    }
+  }
+  const degMin = Math.min.apply(null, ORDER.map(function (id) { return DEG[id]; }));
+  const degMax = Math.max.apply(null, ORDER.map(function (id) { return DEG[id]; }));
+  function nodeR(id) {
+    return L.map.rMin + (L.map.rMax - L.map.rMin) * (degMax > degMin ? (DEG[id] - degMin) / (degMax - degMin) : 0.5);
+  }
+  function neighbours(id) { return ORDER.filter(function (o) { return o !== id && SHARE[id][o]; }); }
+  /* Fixed radial layout: the ridden item in the middle, the items it shares a tag
+     with on the inner ring, the rest on the outer ring. Same result every run. */
+  function mapLayout(center) {
+    const pos = {}, C = L.map.c;
+    pos[center] = [C[0], C[1]];
+    const nb = neighbours(center);
+    const far = ORDER.filter(function (o) { return o !== center && nb.indexOf(o) < 0; });
+    function ring(list, rr, a0) {
+      list.forEach(function (id, k) {
+        const a = (a0 + 360 * k / list.length) * Math.PI / 180;
+        pos[id] = [C[0] + rr[0] * Math.cos(a), C[1] + rr[1] * Math.sin(a)];
+      });
+    }
+    ring(nb, L.map.r1, -90 + (nb.length % 2 ? 0 : 180 / Math.max(1, nb.length)));
+    ring(far, L.map.r2, far.length > 1 ? -90 + 180 / far.length : 90);
+    return pos;
+  }
+
+  function anchor(n, side) {
+    const dx = side === "in" ? -40 : 40;
+    const y = n.y - (n.kind === "folder" && side === "in" ? 10 : 0);
+    return [n.cx + dx, y];
+  }
+  /* The chain of links for a tag: hand-tuned for the demo tag, computed for the rest. */
+  function chainFor(tag) {
+    const tuned = L.tuned[tag];
+    if (tuned) {
+      return { chain: tuned.chain.slice(), gate: tuned.gate, arcs: tuned.chain.slice(1).map(function (id, k) {
+        return [anchor(IT[tuned.chain[k]], "out"), tuned.ctrl[k][0], tuned.ctrl[k][1], anchor(IT[id], "in")];
+      }) };
+    }
+    const chain = ORDER.filter(function (id) { return IT[id].tags.indexOf(tag) >= 0; })
+      .sort(function (a, b) {
+        return (IT[a].branch - IT[b].branch) || (ROW_RANK[IT[a].layer] - ROW_RANK[IT[b].layer]);
+      });
+    const arcs = [];
+    for (let k = 0; k < chain.length - 1; k++) {
+      const a = IT[chain[k]], b = IT[chain[k + 1]];
+      if (a.branch === b.branch) {
+        const u0 = [a.x + a.w, a.cy], u3 = [b.x + b.w, b.cy];
+        arcs.push([u0, [u0[0] + 120, u0[1]], [u3[0] + 120, u3[1]], u3]);
+      } else {
+        const u0 = anchor(a, "out"), u3 = anchor(b, "in");
+        const dx = u3[0] - u0[0], top = Math.min(u0[1], u3[1]) - 70 - 0.1 * Math.abs(u3[1] - u0[1]);
+        arcs.push([u0, [u0[0] + dx * 0.35, top], [u0[0] + dx * 0.7, top], u3]);
+      }
+    }
+    return { chain: chain, gate: Math.min(1, arcs.length - 1), arcs: arcs };
+  }
+  function filterPositions(chain) {
+    const out = {}, n = chain.length, x0 = L.W / 2 - (n - 1) * L.filterRow.gap / 2;
+    chain.forEach(function (id, k) {
+      const it = IT[id];
+      out[id] = [x0 + k * L.filterRow.gap - it.w / 2, L.filterRow.y - it.h / 2 - 14];
+    });
+    return out;
+  }
+
+  /* ---- state --------------------------------------------------------------- */
+  const S = { stop: 1, sel: null, tag: null, approved: false, filter: false, layerFocus: -1,
+              map: false, center: null, mapApproved: false, sys: false };
+  /* SYS.active is true from entering the systems view until every item is home again. */
+  const SYS = { active: false, focus: null, at: {}, it: {}, pc: {}, pt: {}, lab: {}, approved: false,
+                selT0: null, apT0: null, tunnel: null, raf: 0, onDone: null };
+  /* MAP.active is true from the start of a ride until every item is home again. */
+  const MAP = { active: false, riding: false, tunnel: null, tw: {}, cur: {}, raf: 0, onDone: null,
+                gateT0: null, lastNow: 0 };
+  let timers = [];
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+
+  /* ---- build the scene ----------------------------------------------------- */
+  const stage = document.getElementById("stage");
+  const live = document.getElementById("live");
+  const svg = el("svg", { viewBox: "0 0 " + L.W + " " + L.H, preserveAspectRatio: "xMidYMid meet",
+                          role: "group", "aria-label": CONTENT.title });
+  stage.appendChild(svg);
+  const defs = el("defs", {}, svg);
+  const soft = el("filter", { id: "soft", filterUnits: "userSpaceOnUse", x: 0, y: 0, width: L.W, height: L.H }, defs);
+  el("feGaussianBlur", { stdDeviation: 5 }, soft);
+  rect(svg, 0, 0, L.W, L.H, 0, "bg");
+
+  const gGhost = el("g", { "class": "ghostable" }, svg);
+
+  const planes = [];
+  const pcx = L.plane.x + L.plane.w / 2;
+  L.layers.forEach(function (ly, idx) {
+    const pcy = ly.y + L.plane.h / 2;
+    const g = el("g", { "class": "plane fade", transform: "translate(" + pcx + " " + pcy + ") skewX(" + L.plane.skew +
+                        ") translate(" + (-pcx) + " " + (-pcy) + ")" }, gGhost);
+    rect(g, L.plane.x, ly.y + 8, L.plane.w, L.plane.h, L.plane.r, "plane-shadow");
+    const face = rect(g, L.plane.x, ly.y, L.plane.w, L.plane.h, L.plane.r, "plane-face");
+    face.setAttribute("style", "fill:var(--plane" + idx + ");animation-delay:" + (-1.9 * idx) + "s");
+    planes.push(g);
+  });
+
+  const halo = rect(gGhost, 0, 150, 316, 760, 20, "halo fade");
+  const band = rect(gGhost, L.band.x, L.band.y, L.band.w, L.band.h, 10, "band fade");
+  const bandOn = rect(gGhost, L.band.x + 5, 215, L.band.w - 10, 170, 5, "band-on fade");
+
+  const trunk = el("g", { "class": "fade" }, gGhost);
+  el("line", { x1: 260, y1: L.trunkY, x2: L.colX[4], y2: L.trunkY, "class": "tree" }, trunk);
+  el("circle", { cx: 260, cy: L.trunkY, r: 5, "class": "tree-dot" }, trunk);
+  const branchLines = {};
+  Object.keys(L.colX).forEach(function (b) {
+    const x = L.colX[b];
+    const col = ORDER.map(function (id) { return IT[id]; }).filter(function (n) { return String(n.branch) === String(b); });
+    const base = col.filter(function (n) { return n.layer === "base"; })[0];
+    const grp = col.filter(function (n) { return n.layer === "group"; })[0];
+    const per = col.filter(function (n) { return n.layer === "personal"; })[0];
+    const g = el("g", { "class": "fade" }, gGhost);
+    el("line", { x1: x, y1: base.y + base.h, x2: x, y2: L.trunkY, "class": "tree" }, g);
+    el("line", { x1: x, y1: grp.y + grp.h, x2: x, y2: base.y, "class": "tree" }, g);
+    el("line", { x1: x, y1: per.y + per.h, x2: x, y2: grp.y, "class": "tree" }, g);
+    branchLines[b] = g;
+  });
+  el("path", { d: L.pathD, "class": "stop-path" }, gGhost);
+
+  const gBase = el("g", { "class": "ghostable" }, svg);
+
+  const panelG = el("g", { "class": "panel-g" }, svg);
+  const pn = L.filterRow.panel;
+  rect(panelG, pn[0], pn[1] + 10, pn[2], pn[3], 24, "panel-shadow");
+  rect(panelG, pn[0], pn[1], pn[2], pn[3], 24, "panel");
+  rect(panelG, pn[0] + 40, pn[1] + 28, 46, 14, 7, "panel-chip");
+  const panelTitle = text(panelG, pn[0] + 100, pn[1] + 43, "t-filter", "");
+
+  const gMap = el("g", { "class": "map-links" }, svg);
+  LINKS.forEach(function (lk) {
+    lk.line = el("line", { x1: 0, y1: 0, x2: 0, y2: 0, "class": "mlink" }, gMap);
+  });
+  LINKS.forEach(function (lk) {
+    lk.pulse = el("circle", { cx: 0, cy: 0, r: 5, "class": "mpulse" }, gMap);
+    lk.pulse.style.display = "none";
+  });
+  const gTop = el("g", {}, svg);
+  const gTubes = el("g", { "class": "tubes" }, svg);
+  const feed = el("path", { "class": "feed", d: "M 0 0", opacity: 0 }, gTubes);
+
+  /* items */
+  const nodes = {};
+  ORDER.forEach(function (id, k) {
+    const n = IT[id];
+    const g = el("g", { "class": "item" }, gBase);
+    g.style.transform = "translate(" + n.x + "px," + n.y + "px)";
+    rect(g, -8, n.kind === "folder" ? -18 : -8, n.w + 16, n.h + (n.kind === "folder" ? 26 : 16), 16, "ring");
+    let tab = null;
+    if (n.kind === "folder") tab = rect(g, 0, -10, 60, 24, 7, "shape");
+    const main = rect(g, 0, 0, n.w, n.h, TOKENS.radius, "shape main");
+    main.style.animationDelay = (-0.47 * k) + "s";
+    const memb = rect(g, -7, -7, n.w + 14, n.h + 14, TOKENS.radius + 7, "memb");
+    const chips = {}, chipEls = [];
+    n.tags.forEach(function (tag, j) {
+      const cx = 14 + j * (L.chip[0] + 6), cy = n.h - 20;
+      chips[tag] = rect(g, cx, cy, L.chip[0], L.chip[1], 5, "chip");
+      chipEls.push(chips[tag]);
+      const hit = rect(g, cx - 3, cy - 10, L.chip[0] + 6, L.chip[1] + 18, 5, "chip-hit");
+      hit.setAttribute("data-tag", tag);
+      el("title", {}, hit).textContent = CONTENT.tags[tag];
+    });
+    const label = text(g, n.w / 2 + 12, n.h + 32, "t-item", CONTENT.items[id]);
+    button(g, CONTENT.items[id] + ", " + CONTENT.kinds[n.kind] + ", " + CONTENT.layers[n.layer] + " " +
+              CONTENT.ui.layerWord + ". " + CONTENT.ui.tagsWord + ": " +
+              n.tags.map(function (t) { return CONTENT.tags[t]; }).join(", "));
+    g.setAttribute("data-id", id);
+    nodes[id] = { g: g, chips: chips, chipEls: chipEls, main: main, tab: tab, memb: memb, label: label,
+                  tw: measure(label, CONTENT.items[id]) };
+    MAP.cur[id] = { x: n.x, y: n.y, m: 0, r: nodeR(id), w: n.w, h: n.h, rx: TOKENS.radius,
+                    lx: n.w / 2 + 12, ly: n.h + 32, custom: false };
+    MAP.tw[id] = null;
+  });
+
+  /* One item drawn anywhere between its tree shape (m = 0) and its map disc (m = 1).
+     x, y is the top-left corner of the item's original box. */
+  function applyItem(id, x, y, m, r, shp) {
+    const n = IT[id], nd = nodes[id];
+    nd.g.style.transform = "translate(" + x + "px," + y + "px)";
+    const w = shp ? shp.w : lerp(n.w, 2 * r, m), h = shp ? shp.h : lerp(n.h, 2 * r, m),
+          rx = shp ? shp.rx : lerp(TOKENS.radius, r, m);
+    nd.main.setAttribute("x", (n.w - w) / 2); nd.main.setAttribute("y", (n.h - h) / 2);
+    nd.main.setAttribute("width", w); nd.main.setAttribute("height", h); nd.main.setAttribute("rx", rx);
+    nd.memb.setAttribute("x", (n.w - w) / 2 - 7); nd.memb.setAttribute("y", (n.h - h) / 2 - 7);
+    nd.memb.setAttribute("width", w + 14); nd.memb.setAttribute("height", h + 14); nd.memb.setAttribute("rx", rx + 7);
+    nd.memb.style.opacity = String(0.45 * m * (shp && shp.memb !== undefined ? shp.memb : 1));
+    if (nd.tab) nd.tab.style.opacity = String(1 - m);
+    nd.chipEls.forEach(function (c) { c.style.opacity = String(1 - m); });
+    const lx = shp && shp.lx !== undefined ? shp.lx : lerp(n.w / 2 + 12, n.w / 2 - nd.tw / 2, m);
+    const ly = shp && shp.ly !== undefined ? shp.ly : lerp(n.h + 32, n.h / 2 + h / 2 + 28, m);
+    nd.label.setAttribute("x", lx);
+    nd.label.setAttribute("y", ly);
+    nd.label.style.opacity = shp && shp.lab !== undefined ? String(shp.lab) : "";
+    const c = MAP.cur[id];
+    c.x = x; c.y = y; c.m = m; c.r = r; c.w = w; c.h = h; c.rx = rx; c.lx = lx; c.ly = ly; c.custom = !!shp;
+  }
+  function centreOf(id) { const c = MAP.cur[id], n = IT[id]; return [c.x + n.w / 2, c.y + n.h / 2]; }
+
+  /* the ride: a short liquid stub beside the open item; taking it leads to the map */
+  const ride = el("g", { "class": "ride" }, svg);
+  el("circle", { cx: 78, cy: -14, r: 26, "class": "ring" }, ride);
+  ["w1", "w2", "w3"].forEach(function (c) { el("path", { d: "M 0 0 C 30 0 50 -14 78 -14", "class": c }, ride); });
+  const rideHeads = el("g", { "class": "heads" }, ride);
+  el("circle", { cx: 78, cy: -14, r: 13, "class": "head-soft breath" }, rideHeads);
+  el("circle", { cx: 78, cy: -14, r: 5.5, "class": "head" }, rideHeads);
+  text(ride, 78, -38, "t-small t-ride", CONTENT.ui.rideMapWord);
+  el("rect", { x: -6, y: -58, width: 150, height: 60, fill: "transparent" }, ride);
+  button(ride, CONTENT.ui.ride);
+  ride.style.display = "none";
+
+  /* the tunnel: soft rings that pass the viewer during a ride */
+  const gTunnel = el("g", {}, svg);
+  const rings = [];
+  for (let i = 0; i < 7; i++) {
+    const c = el("circle", { cx: 0, cy: 0, r: 0, "class": "tunnel-ring", "stroke-width": 10, opacity: 0 }, gTunnel);
+    rings.push(c);
+  }
+
+  /* gate */
+  const gate = el("g", { "class": "gate", opacity: 0 }, svg);
+  el("circle", { cx: 0, cy: 0, r: 26, "class": "ring" }, gate);
+  el("circle", { cx: 0, cy: 0, r: 22, "class": "pulse" }, gate);
+  el("polygon", { points: "0,-15 15,0 0,15 -15,0", "class": "diamond" }, gate);
+  el("line", { x1: -6, y1: 0, x2: 6, y2: 0, "class": "bar" }, gate);
+  el("circle", { cx: 0, cy: 0, r: 30, fill: "transparent" }, gate);
+  button(gate, CONTENT.ui.approve);
+  gate.setAttribute("aria-pressed", "false");
+  gate.style.display = "none";
+
+  const mapGate = el("g", { "class": "gate map-gate" }, svg);
+  el("circle", { cx: 0, cy: 0, r: 26, "class": "ring" }, mapGate);
+  el("circle", { cx: 0, cy: 0, r: 22, "class": "pulse" }, mapGate);
+  el("polygon", { points: "0,-15 15,0 0,15 -15,0", "class": "diamond" }, mapGate);
+  el("line", { x1: -6, y1: 0, x2: 6, y2: 0, "class": "bar" }, mapGate);
+  el("circle", { cx: 0, cy: 0, r: 30, fill: "transparent" }, mapGate);
+  button(mapGate, CONTENT.ui.approveMap);
+  mapGate.setAttribute("aria-pressed", "false");
+  mapGate.style.display = "none";
+
+  /* stops */
+  const stops = L.stops.map(function (p, k) {
+    const g = el("g", { "class": "stop" }, svg);
+    g.style.transform = "translate(" + p[0] + "px," + p[1] + "px)";
+    el("circle", { cx: 0, cy: 0, r: L.stopR + 7, "class": "ring" }, g);
+    el("circle", { cx: 0, cy: 0, r: L.stopR, "class": "dot" }, g);
+    el("circle", { cx: 0, cy: 0, r: L.stopR + 12, fill: "transparent" }, g);
+    text(g, 0, 6, "t-stop", String(k + 1));
+    button(g, CONTENT.ui.stopWord + " " + (k + 1) + ": " + CONTENT.stops[k]);
+    g.setAttribute("data-stop", String(k + 1));
+    return g;
+  });
+  function placeStops(inMap) {
+    stops.forEach(function (g, k) {
+      const p = inMap ? [L.mapStops.x + k * L.mapStops.gap, L.mapStops.y] : L.stops[k];
+      g.style.transform = "translate(" + p[0] + "px," + p[1] + "px)";
+    });
+  }
+
+  /* labels */
+  text(svg, L.plane.x, 84, "t-title", CONTENT.title);
+  const layerLabels = L.layers.map(function (ly) {
+    return text(svg, L.plane.x + L.plane.w + 28, ly.y + L.plane.h / 2 + 8, "t-layer", CONTENT.layers[ly.id]);
+  });
+  text(svg, 40, L.band.y + L.band.h + 40, "t-small t-conn", CONTENT.connector);
+  const cap = text(svg, L.plane.x, 968, "t-cap", "");
+  const detail = text(svg, L.plane.x, 1010, "t-detail", "");
+
+  /* tag legend: the same chips as on the items, with their names */
+  const legend = {};
+  const legendParts = L.tagOrder.map(function (tag) {
+    const g = el("g", { "class": "legend" }, svg);
+    const ring = rect(g, -5, -5, 10, 44, 22, "ring");
+    const pill = rect(g, 0, 0, 10, 34, 17, "pill");
+    rect(g, 12, 12, L.chip[0], L.chip[1], 5, "swatch");
+    const t = text(g, 12 + L.chip[0] + 10, 23, "t-legend", CONTENT.tags[tag]);
+    button(g, CONTENT.ui.pickTag + ": " + CONTENT.tags[tag]);
+    g.setAttribute("aria-pressed", "false");
+    g.setAttribute("data-tag", tag);
+    legend[tag] = g;
+    return { g: g, ring: ring, pill: pill, t: t, tag: tag };
+  });
+  /* Text widths change with the skin, so pills and map labels are re-measured. */
+  function relayoutText() {
+    let x = L.plane.x + L.plane.w;
+    for (let k = legendParts.length - 1; k >= 0; k--) {
+      const q = legendParts[k];
+      const full = 12 + L.chip[0] + 10 + measure(q.t, CONTENT.tags[q.tag]) + 16;
+      q.pill.setAttribute("width", full);
+      q.ring.setAttribute("width", full + 10);
+      x -= full;
+      q.g.setAttribute("transform", "translate(" + x + " 56)");
+      x -= 12;
+    }
+    ORDER.forEach(function (id) {
+      nodes[id].tw = measure(nodes[id].label, CONTENT.items[id]);
+      const c = MAP.cur[id];
+      if (MAP.active && !SYS.active) applyItem(id, c.x, c.y, c.m, c.r);
+    });
+    if (SYS.active) sysKick();
+  }
+  relayoutText();
+
+  /* ---- tubes --------------------------------------------------------------- */
+  let tubes = [];      // one entry per link of the active chain
+  let chainInfo = null;
+  let raf = 0;
+
+  function buildTubes() {
+    tubes.forEach(function (t) { gTubes.removeChild(t.g); });
+    tubes = [];
+    chainInfo = S.tag ? chainFor(S.tag) : null;
+    if (!chainInfo || !chainInfo.arcs.length) { gate.style.display = "none"; feed.setAttribute("opacity", 0); return; }
+    chainInfo.arcs.forEach(function (a, k) {
+      const d = "M " + a[0][0] + " " + a[0][1] + " C " + a[1][0] + " " + a[1][1] + " " + a[2][0] + " " + a[2][1] +
+                " " + a[3][0] + " " + a[3][1];
+      const g = el("g", { "class": "tube" }, gTubes);
+      const paths = ["w1", "w2", "w3"].map(function (c) { return el("path", { d: d, "class": c }, g); });
+      el("path", { d: d, "class": "w4" }, g);
+      const start = el("circle", { cx: a[0][0], cy: a[0][1], r: 6, "class": "start" }, g);
+      const soft = el("circle", { cx: a[0][0], cy: a[0][1], r: 13, "class": "head-soft" }, g);
+      const head = el("circle", { cx: a[0][0], cy: a[0][1], r: 5.5, "class": "head" }, g);
+      let len = 0;
+      try { len = paths[0].getTotalLength(); } catch (e) { len = 0; }
+      if (!len) len = 400;
+      paths.forEach(function (p) { p.setAttribute("stroke-dasharray", len + " " + len); });
+      let gateFrac = 0.5;
+      if (k === chainInfo.gate) {
+        const G = bez(a[0], a[1], a[2], a[3], 0.5);
+        let best = 1e9;
+        for (let i = 0; i <= 200; i++) {
+          let pt;
+          try { pt = paths[0].getPointAtLength(len * i / 200); } catch (e) { pt = null; }
+          if (!pt) break;
+          const dd = (pt.x - G[0]) * (pt.x - G[0]) + (pt.y - G[1]) * (pt.y - G[1]);
+          if (dd < best) { best = dd; gateFrac = i / 200; }
+        }
+        gate.setAttribute("transform", "translate(" + G[0] + " " + G[1] + ")");
+        gate.style.display = "";
+      }
+      g.style.display = "none";
+      tubes.push({ g: g, paths: paths, start: start, soft: soft, head: head, len: len, p: 0,
+                   gateFrac: gateFrac, anim: null });
+    });
+    const first = IT[chainInfo.chain[0]];
+    feed.setAttribute("d", "M " + (L.band.x + L.band.w) + " " + (first.cy + 55) + " C 230 " + (first.cy + 55) + " " +
+                      (first.x - 100) + " " + first.cy + " " + first.x + " " + first.cy);
+    bandOn.setAttribute("y", first.cy - 30);
+  }
+
+  function target(k) {
+    if (!chainInfo) return 0;
+    return (k === chainInfo.gate && !S.approved) ? tubes[k].gateFrac : 1;
+  }
+  function paint(t) {
+    t.g.style.display = t.p > 0.001 ? "" : "none";
+    t.g.classList.toggle("is-full", t.p >= 0.999);
+    t.paths.forEach(function (p) { p.setAttribute("stroke-dashoffset", t.len * (1 - t.p)); });
+    let pt = null;
+    try { pt = t.paths[0].getPointAtLength(t.len * t.p); } catch (e) { pt = null; }
+    if (pt) {
+      t.soft.setAttribute("cx", pt.x); t.soft.setAttribute("cy", pt.y);
+      t.head.setAttribute("cx", pt.x); t.head.setAttribute("cy", pt.y);
+    }
+  }
+  function gateState() {
+    if (!chainInfo || !tubes.length) return;
+    const t = tubes[chainInfo.gate];
+    const waiting = !S.approved && t.p >= t.gateFrac - 0.002;
+    gate.classList.toggle("is-waiting", waiting);
+    gate.classList.toggle("is-approved", S.approved);
+    gate.setAttribute("aria-pressed", S.approved ? "true" : "false");
+  }
+  /* Links grow one after another; nothing grows past a gate that is not approved. */
+  function tick(now) {
+    raf = 0;
+    let busy = false;
+    for (let k = 0; k < tubes.length; k++) {
+      const t = tubes[k];
+      const ready = k === 0 || tubes[k - 1].p >= 1;
+      const to = target(k);
+      if (!t.anim && ready && t.p < to - 0.001) {
+        t.anim = { from: t.p, to: to, start: now, dur: Math.max(350, 1000 * (to - t.p)) };
+      }
+      if (t.anim) {
+        const u = Math.min(1, (now - t.anim.start) / t.anim.dur);
+        t.p = t.anim.from + (t.anim.to - t.anim.from) * ease(u);
+        if (u >= 1) { t.p = t.anim.to; t.anim = null; }
+        paint(t);
+        busy = true;
+      }
+    }
+    gateState();
+    if (busy) raf = requestAnimationFrame(tick);
+    else updateText();
+  }
+  function kick() {
+    if (!tubes.length) return;
+    if (reduce) {
+      for (let k = 0; k < tubes.length; k++) {
+        const ready = k === 0 || tubes[k - 1].p >= 1;
+        tubes[k].p = ready ? target(k) : 0;
+        tubes[k].anim = null;
+        paint(tubes[k]);
+      }
+      gateState();
+      updateText();
+      return;
+    }
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  /* Pull the flow back behind the gate (used when a stop asks for "waiting"). */
+  function holdAtGate() {
+    if (!chainInfo) return;
+    tubes.forEach(function (t, k) {
+      t.anim = null;
+      if (k === chainInfo.gate) t.p = Math.min(t.p, t.gateFrac);
+      else if (k > chainInfo.gate) t.p = 0;
+      paint(t);
+    });
+    gateState();
+  }
+
+  /* ---- render -------------------------------------------------------------- */
+  let shownTag = null;
+  function render() {
+    const tag = S.tag;
+    const sel = S.sel ? IT[S.sel] : null;
+    const has = function (id) { return !!tag && IT[id].tags.indexOf(tag) >= 0; };
+
+    if (tag !== shownTag) { buildTubes(); shownTag = tag; }
+
+    /* matching items sit above the filter panel; move them before any position change */
+    const moved = [];
+    ORDER.forEach(function (id) {
+      const want = (MAP.active || has(id)) ? gTop : gBase;
+      if (nodes[id].g.parentNode !== want) { want.appendChild(nodes[id].g); moved.push(nodes[id].g); }
+    });
+    moved.forEach(function (g) { try { void window.getComputedStyle(g).transform; } catch (e) {} });
+
+    const rowPos = (S.filter && chainInfo) ? filterPositions(chainInfo.chain) : null;
+    svg.classList.toggle("mode-filter", !!rowPos);
+
+    ORDER.forEach(function (id) {
+      const n = IT[id], g = nodes[id].g;
+      let dim = false;
+      if (MAP.active) dim = false;
+      else if (tag) dim = !has(id);
+      else if (sel) dim = n.branch !== sel.branch;
+      else if (S.layerFocus >= 0) dim = n.layer !== L.layers[S.layerFocus].id;
+      g.classList.toggle("is-dim", dim);
+      g.classList.toggle("is-active", has(id));
+      g.classList.toggle("is-selected", S.sel === id);
+      g.classList.toggle("is-far", S.map && id !== S.center && !SHARE[S.center][id]);
+      g.setAttribute("aria-pressed", S.sel === id ? "true" : "false");
+      const at = rowPos && rowPos[id] ? rowPos[id] : [n.x, n.y];
+      if (!MAP.active) g.style.transform = "translate(" + at[0] + "px," + at[1] + "px)";
+      for (const t in nodes[id].chips) nodes[id].chips[t].classList.toggle("on", t === tag && !dim);
+    });
+
+    const drill = !!sel && !tag && !MAP.active;
+    planes.forEach(function (p, idx) {
+      const focus = S.layerFocus === idx;
+      p.classList.toggle("is-focus", focus);
+      p.setAttribute("opacity", drill ? 0.6 : (S.layerFocus >= 0 && !focus ? 0.45 : 1));
+      layerLabels[idx].setAttribute("opacity", S.layerFocus >= 0 && !focus ? 0.4 : 1);
+      layerLabels[idx].setAttribute("font-weight", focus ? 700 : 500);
+    });
+    if (drill) halo.setAttribute("x", L.colX[sel.branch] - 128);
+    halo.classList.toggle("on", drill);
+    band.setAttribute("opacity", drill ? 0.5 : 1);
+    bandOn.classList.toggle("on", !!tag);
+    trunk.classList.toggle("is-faint", drill);
+    Object.keys(branchLines).forEach(function (b) {
+      branchLines[b].classList.toggle("is-faint", drill && String(sel.branch) !== String(b));
+    });
+
+    feed.setAttribute("opacity", tag && tubes.length ? 1 : 0);
+    gate.setAttribute("opacity", tag && tubes.length ? 1 : 0);
+    gate.setAttribute("tabindex", tag && tubes.length && !rowPos ? "0" : "-1");
+
+    L.tagOrder.forEach(function (t) {
+      legend[t].classList.toggle("on", t === tag);
+      legend[t].setAttribute("aria-pressed", t === tag ? "true" : "false");
+    });
+    stops.forEach(function (g, k) {
+      g.classList.toggle("is-current", k + 1 === S.stop);
+      if (k + 1 === S.stop) g.setAttribute("aria-current", "step"); else g.removeAttribute("aria-current");
+    });
+    panelTitle.textContent = tag ? CONTENT.tags[tag] : "";
+
+    const showRide = !!sel && !tag && (!MAP.active || MAP.riding);
+    ride.style.display = showRide ? "" : "none";
+    if (showRide) ride.setAttribute("transform", "translate(" + (sel.x + sel.w) + " " + sel.cy + ")");
+    ride.setAttribute("tabindex", showRide && !MAP.active ? "0" : "-1");
+    svg.classList.toggle("mapping", MAP.active);
+    const sysStub = !MAP.riding && !SYS.active && ((!!sel && !tag && !MAP.active) || (S.map && !!S.center));
+    rideS.style.display = sysStub ? "" : "none";
+    rideS.classList.toggle("in-map", !!S.map);
+    if (sysStub) {
+      rideS.setAttribute("transform", S.map
+        ? "translate(" + (L.map.c[0] + nodeR(S.center) + 4) + " " + L.map.c[1] + ")"
+        : "translate(" + (sel.x + sel.w) + " " + sel.cy + ")");
+    }
+    rideS.setAttribute("tabindex", sysStub ? "0" : "-1");
+
+    gateState();
+    kick();
+    updateText();
+  }
+
+  function updateText() {
+    cap.textContent = CONTENT.stops[S.stop - 1];
+    let d = CONTENT.ui.hint;
+    if (S.sys) {
+      if (S.sel) {
+        const ss = sysOf(S.sel);
+        d = CONTENT.items[S.sel] + "  ·  " + ss.length + " " + CONTENT.ui.sysWord;
+        const gated = ss.some(function (x) { const l = linkOf(SYS.at[S.sel], x); return !!(l && l.gated); });
+        if (gated) d += "  ·  " + (SYS.approved ? CONTENT.ui.approved : CONTENT.ui.waiting);
+      } else if (SYS.focus) {
+        d = SYSC.names[SYS.focus] + "  ·  " + SYSC.members[SYS.focus].length + " " + CONTENT.ui.itemsWord;
+      } else d = CONTENT.ui.sysHint;
+    } else if (S.map && S.center) {
+      const nb = neighbours(S.center);
+      d = CONTENT.items[S.center] + "  ·  " + nb.length + " " + CONTENT.ui.linksWord;
+      if (nb.length > 1) d += "  ·  " + (S.mapApproved ? CONTENT.ui.approved : CONTENT.ui.waiting);
+      d += "  ·  " + CONTENT.ui.mapHint;
+    } else if (S.sel) {
+      const n = IT[S.sel];
+      d = CONTENT.items[S.sel] + "  ·  " + CONTENT.kinds[n.kind] + "  ·  " + CONTENT.layers[n.layer] + " " +
+          CONTENT.ui.layerWord + "  ·  " + CONTENT.ui.tagsWord + ": " +
+          n.tags.map(function (t) { return CONTENT.tags[t]; }).join(", ");
+    } else if (S.tag && chainInfo) {
+      d = CONTENT.tags[S.tag] + "  ·  " + chainInfo.chain.length + " " + CONTENT.ui.itemsWord;
+      if (tubes.length && !S.filter) {
+        const t = tubes[chainInfo.gate];
+        if (S.approved) d += "  ·  " + CONTENT.ui.approved;
+        else if (t.p >= t.gateFrac - 0.002) d += "  ·  " + CONTENT.ui.waiting;
+      }
+    }
+    if (detail.textContent !== d) detail.textContent = d;
+    const say = cap.textContent + " " + d;
+    if (live.textContent !== say) live.textContent = say;
+  }
+
+  /* ---- the map engine: ride in, re-centre, ride back ------------------------ */
+  function anyTween() { return ORDER.some(function (id) { return !!MAP.tw[id]; }); }
+  function startLoop() { if (!MAP.raf) MAP.raf = requestAnimationFrame(frame); }
+  function tweenTo(id, x, y, m, r, delay, dur) {
+    const c = MAP.cur[id];
+    MAP.tw[id] = { fx: c.x, fy: c.y, fm: c.m, fr: c.r, tx: x, ty: y, tm: m, tr: r, t0: null, delay: delay, dur: dur,
+                   fs: c.custom ? { w: c.w, h: c.h, rx: c.rx, lx: c.lx, ly: c.ly } : null };
+  }
+  function drawLinks(now) {
+    const c = S.center;
+    const settled = S.map && !anyTween();
+    const nb = S.map && c ? neighbours(c) : [];
+    const gatedTo = nb.length > 1 ? nb[L.map.gateIndex % nb.length] : null;
+    let hotK = 0, gateShown = false;
+    LINKS.forEach(function (lk) {
+      const A = centreOf(lk.a), B = centreOf(lk.b);
+      lk.line.setAttribute("x1", A[0]); lk.line.setAttribute("y1", A[1]);
+      lk.line.setAttribute("x2", B[0]); lk.line.setAttribute("y2", B[1]);
+      const hot = S.map && (lk.a === c || lk.b === c);
+      lk.line.classList.toggle("is-hot", hot);
+      if (!hot || !settled) { lk.pulse.style.display = "none"; return; }
+      const other = lk.a === c ? lk.b : lk.a;
+      const U0 = centreOf(c), U1 = centreOf(other);
+      const dx = U1[0] - U0[0], dy = U1[1] - U0[1], len = Math.sqrt(dx * dx + dy * dy) || 1;
+      const s0 = MAP.cur[c].r / len, s1 = 1 - MAP.cur[other].r / len;
+      const gated = other === gatedTo;
+      let t = 0.5, show = true;
+      if (gated && !S.mapApproved) {
+        if (reduce) t = 0.5;
+        else { if (MAP.gateT0 === null) MAP.gateT0 = now; t = Math.min(0.5, (now - MAP.gateT0) / 1300 * 0.5); }
+      } else if (reduce) { show = false; }
+      else { t = ((now / 2800) + hotK * 0.173) % 1; }
+      const at = s0 + (s1 - s0) * t;
+      lk.pulse.style.display = show ? "" : "none";
+      lk.pulse.setAttribute("cx", U0[0] + dx * at); lk.pulse.setAttribute("cy", U0[1] + dy * at);
+      if (gated) {
+        const mid = s0 + (s1 - s0) * 0.5;
+        mapGate.setAttribute("transform", "translate(" + (U0[0] + dx * mid) + " " + (U0[1] + dy * mid) + ")");
+        mapGate.classList.toggle("is-waiting", !S.mapApproved && t >= 0.499);
+        mapGate.classList.toggle("is-approved", S.mapApproved);
+        mapGate.setAttribute("aria-pressed", S.mapApproved ? "true" : "false");
+        gateShown = true;
+      }
+      hotK++;
+    });
+    mapGate.style.display = gateShown ? "" : "none";
+    mapGate.setAttribute("tabindex", gateShown ? "0" : "-1");
+  }
+  function frame(now) {
+    MAP.raf = 0;
+    MAP.lastNow = now;
+    let busy = false;
+    if (MAP.tunnel) {
+      const T = MAP.tunnel;
+      if (T.start === null) T.start = now;
+      rings.forEach(function (c, i) {
+        const u = clamp01((now - T.start - 250 - i * 95) / 900);
+        c.setAttribute("cx", T.o[0]); c.setAttribute("cy", T.o[1]);
+        c.setAttribute("r", 20 + 1500 * u * u);
+        c.setAttribute("stroke-width", 6 + 60 * u);
+        c.setAttribute("opacity", u > 0 && u < 1 ? 0.34 * (1 - u) : 0);
+      });
+      busy = true;
+    }
+    let moving = false;
+    ORDER.forEach(function (id) {
+      const w = MAP.tw[id];
+      if (!w) return;
+      if (w.t0 === null) w.t0 = now + w.delay;
+      const u = clamp01((now - w.t0) / w.dur), e = ease(u);
+      if (w.fs && u < 1) {
+        const n = IT[id], tw2 = lerp(n.w, 2 * w.tr, w.tm), th2 = lerp(n.h, 2 * w.tr, w.tm);
+        applyItem(id, lerp(w.fx, w.tx, e), lerp(w.fy, w.ty, e), lerp(w.fm, w.tm, e), lerp(w.fr, w.tr, e),
+          { w: lerp(w.fs.w, tw2, e), h: lerp(w.fs.h, th2, e), rx: lerp(w.fs.rx, lerp(TOKENS.radius, w.tr, w.tm), e),
+            memb: e, lx: lerp(w.fs.lx, lerp(n.w / 2 + 12, n.w / 2 - nodes[id].tw / 2, w.tm), e),
+            ly: lerp(w.fs.ly, lerp(n.h + 32, n.h / 2 + th2 / 2 + 28, w.tm), e) });
+      } else applyItem(id, lerp(w.fx, w.tx, e), lerp(w.fy, w.ty, e), lerp(w.fm, w.tm, e), lerp(w.fr, w.tr, e));
+      if (u >= 1) MAP.tw[id] = null; else moving = true;
+    });
+    if (MAP.active) drawLinks(now);
+    if (!moving && !MAP.tunnel && MAP.onDone) { const f = MAP.onDone; MAP.onDone = null; f(); }
+    if (moving || busy || (S.map && !reduce)) { if (MAP.active) startLoop(); }
+  }
+  function hideRings() { rings.forEach(function (c) { c.setAttribute("opacity", 0); }); }
+  function landInMap(instant) {
+    MAP.tunnel = null; MAP.riding = false;
+    hideRings();
+    ride.classList.remove("is-go");
+    S.map = true; S.sel = S.center; S.mapApproved = false; MAP.gateT0 = null;
+    const pos = mapLayout(S.center);
+    ORDER.forEach(function (id, k) {
+      const n = IT[id], x = pos[id][0] - n.w / 2, y = pos[id][1] - n.h / 2, r = nodeR(id);
+      if (instant) { MAP.tw[id] = null; applyItem(id, x, y, 1, r); }
+      else tweenTo(id, x, y, 1, r, k * 35, 800);
+    });
+    svg.classList.add("map-on");
+    placeStops(true);
+    render();
+    if (instant) drawLinks(MAP.lastNow); else startLoop();
+  }
+  function rideIn(id) {
+    if (!id || MAP.active) return;
+    clearTimers();
+    S.tag = null; S.approved = false; S.filter = false; S.layerFocus = -1;
+    S.sel = id; S.center = id; S.stop = 7;
+    MAP.active = true; MAP.onDone = null;
+    ORDER.forEach(function (o) { MAP.tw[o] = null; applyItem(o, IT[o].x, IT[o].y, 0, nodeR(o)); });
+    const n = IT[id], o = [n.x + n.w + 78, n.cy - 14];
+    gGhost.style.transformOrigin = o[0] + "px " + o[1] + "px";
+    if (reduce) {
+      svg.classList.add("mode-map");
+      landInMap(true);
+      crossFade();
+      return;
+    }
+    MAP.riding = true;
+    render();
+    ride.classList.add("is-go");
+    MAP.tunnel = { start: null, o: o };
+    later(function () { svg.classList.add("mode-map"); }, 250);
+    later(function () { landInMap(false); }, 1150);
+    startLoop();
+  }
+  /* Reduced motion: no tunnel and no drift, only a short fade into the map. */
+  function crossFade() {
+    const t0 = { v: null };
+    function step(now) {
+      if (t0.v === null) t0.v = now;
+      const u = clamp01((now - t0.v) / 300);
+      gTop.setAttribute("opacity", u); gMap.style.opacity = String(u);
+      if (u < 1) requestAnimationFrame(step); else { gTop.removeAttribute("opacity"); gMap.style.opacity = ""; }
+    }
+    gTop.setAttribute("opacity", 0);
+    requestAnimationFrame(step);
+  }
+  function recentre(id) {
+    if (!S.map || id === S.center) return;
+    S.center = id; S.sel = id; S.mapApproved = false; MAP.gateT0 = null;
+    const pos = mapLayout(id);
+    ORDER.forEach(function (o, k) {
+      const n = IT[o], x = pos[o][0] - n.w / 2, y = pos[o][1] - n.h / 2;
+      if (reduce) { MAP.tw[o] = null; applyItem(o, x, y, 1, nodeR(o)); }
+      else tweenTo(o, x, y, 1, nodeR(o), k * 15, 700);
+    });
+    render();
+    if (reduce) drawLinks(MAP.lastNow); else startLoop();
+  }
+  function approveMap() {
+    if (!S.map || S.mapApproved) return;
+    S.mapApproved = true;
+    if (reduce) drawLinks(MAP.lastNow); else startLoop();
+    updateText();
+  }
+  /* Ride back: every item returns to its home in the tree. snap = no animation. */
+  function rideBack(snap) {
+    if (SYS.active) { sysExit(snap); return; }
+    if (!MAP.active) return;
+    clearTimers();
+    S.map = false; MAP.riding = false; MAP.tunnel = null; MAP.onDone = null;
+    hideRings();
+    ride.classList.remove("is-go");
+    svg.classList.remove("map-on");
+    svg.classList.remove("mode-map");
+    mapGate.style.display = "none";
+    LINKS.forEach(function (lk) { lk.pulse.style.display = "none"; });
+    placeStops(false);
+    if (S.stop >= 7) S.stop = 3;   /* an open item is the drill-down stop */
+    function done() {
+      MAP.active = false;
+      ORDER.forEach(function (o) { MAP.tw[o] = null; applyItem(o, IT[o].x, IT[o].y, 0, nodeR(o)); });
+      render();
+    }
+    if (snap || reduce) { done(); return; }
+    ORDER.forEach(function (o, k) { tweenTo(o, IT[o].x, IT[o].y, 0, nodeR(o), k * 30, 800); });
+    MAP.onDone = done;
+    render();
+    startLoop();
+  }
+
+  /* ---- v3: the systems view --------------------------------------------------
+     Six generic system panels. The same twelve item elements drift into them;
+     an item that lives in several systems is a real element in one panel and a
+     soft echo in the others, joined by thin liquid tubes. */
+  const SYSC = CONTENT.systems, SYSIDS = Object.keys(SYSC.names);
+  const PW = 520, PH = 350;
+  function tiles(list) { return list.map(function (a) { return { x: a[0], y: a[1], w: a[2], h: 26 }; }); }
+  const SLOTS = {
+    grid: tiles([[22, 89, 110], [22, 127, 110], [22, 203, 110], [22, 241, 110]]),
+    library: tiles([[116, 114, 106], [248, 114, 106], [380, 114, 106], [116, 218, 106]]),
+    pipeline: tiles([[21, 69, 100], [21, 134, 100], [21, 199, 100], [21, 264, 100]]),
+    record: tiles([[189, 124, 140], [189, 160, 140], [357, 124, 140], [357, 160, 140]]),
+    queue: tiles([[32, 98, 124], [198, 98, 124], [364, 98, 124], [32, 178, 124]]),
+    ledger: tiles([[24, 87, 150], [24, 123, 150], [24, 159, 150], [24, 195, 150]])
+  };
+  function Ln(g, a, b, c, d, cls) { return el("line", { x1: a, y1: b, x2: c, y2: d, "class": cls || "sy-l" }, g); }
+  function Ci(g, x, y, r, cls) { return el("circle", { cx: x, cy: y, r: r, "class": cls }, g); }
+  const DRAW = {
+    grid: function (g) {
+      rect(g, 16, 52, 488, 30, 6, "sy-s"); rect(g, 16, 52, 488, 258, 6, "sy-o");
+      for (let c = 1; c < 4; c++) Ln(g, 16 + 122 * c, 52, 16 + 122 * c, 310);
+      for (let c = 0; c < 4; c++) rect(g, 26 + 122 * c, 61, 60, 12, 6, "sy-f");
+      for (let r = 0; r < 6; r++) {
+        Ln(g, 16, 82 + 38 * r, 504, 82 + 38 * r);
+        rect(g, 148, 96 + 38 * r, 60 + 24 * (r % 2), 10, 5, "sy-f");
+        rect(g, 270, 96 + 38 * r, 48, 10, 5, "sy-f");
+        rect(g, 396, 94 + 38 * r, 70, 14, 7, r % 3 === 0 ? "sy-a" : (r === 2 ? "sy-w" : "sy-f"));
+      }
+    },
+    library: function (g) {
+      for (let k = 0; k < 3; k++) { rect(g, 16, 62 + 70 * k, 30, 12, 4, "sy-f"); rect(g, 16, 68 + 70 * k, 74, 44, 6, "sy-o"); }
+      for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
+        rect(g, 110 + 132 * c, 56 + 104 * r, 118, 90, 8, "sy-o"); rect(g, 116 + 132 * c, 62 + 104 * r, 106, 46, 5, "sy-s");
+      }
+      rect(g, 110, 272, 394, 56, 8, "sy-s");
+      for (let i = 0; i < 5; i++) rect(g, 120 + 76 * i, 282, 64, 36, 4, "sy-f");
+    },
+    pipeline: function (g) {
+      for (let k = 0; k < 4; k++) { rect(g, 16, 60 + 65 * k, 110, 44, 8, "sy-o"); Ln(g, 126, 82 + 65 * k, 160, 178); }
+      for (let i = 0; i < 3; i++) {
+        rect(g, 160 + 100 * i, 130, 86, 96, 10, "sy-s");
+        rect(g, 174 + 100 * i, 150, 58, 10, 5, "sy-f"); rect(g, 174 + 100 * i, 170, 40, 10, 5, "sy-f");
+        Ln(g, 246 + 100 * i, 178, 260 + 100 * i, 178);
+      }
+      Ci(g, 403, 204, 6, "sy-a");
+      rect(g, 460, 118, 46, 120, 23, "sy-o");
+      el("ellipse", { cx: 483, cy: 141, rx: 23, ry: 9, "class": "sy-o" }, g);
+      rect(g, 16, 318, 488, 8, 4, "sy-f");
+    },
+    record: function (g) {
+      rect(g, 16, 56, 150, 180, 10, "sy-o"); Ci(g, 91, 104, 28, "sy-s");
+      rect(g, 40, 146, 102, 10, 5, "sy-f"); rect(g, 52, 166, 78, 8, 4, "sy-f"); rect(g, 40, 196, 102, 22, 11, "sy-o");
+      for (let i = 0; i < 5; i++) rect(g, 182 + 65 * i, 56, 60, 22, 11, i < 2 ? "sy-a" : "sy-f");
+      for (let j = 0; j < 2; j++) {
+        const x = 182 + 168 * j;
+        rect(g, x, 92, 154, 146, 8, "sy-o"); rect(g, x + 8, 102, 70, 10, 5, "sy-f");
+        rect(g, x + 8, 200, 120, 8, 4, "sy-f"); rect(g, x + 8, 216, 90, 8, 4, "sy-f");
+      }
+      rect(g, 16, 252, 488, 76, 8, "sy-s");
+      for (let i = 0; i < 3; i++) { Ci(g, 36, 270 + 20 * i, 4, "sy-f"); rect(g, 50, 266 + 20 * i, 200 + 40 * (i % 2), 8, 4, "sy-f"); }
+    },
+    queue: function (g) {
+      for (let k = 0; k < 3; k++) {
+        const x = 16 + 166 * k;
+        rect(g, x, 52, 156, 284, 10, "sy-s"); rect(g, x + 10, 62, 60, 14, 7, "sy-f");
+        for (let j = 0; j < 3; j++) {
+          const y = 90 + 80 * j;
+          rect(g, x + 8, y, 140, 66, 8, "sy-c"); rect(g, x + 16, y + 46, 70, 8, 4, "sy-f");
+          Ci(g, x + 134, y + 50, 5, (k + j) % 3 === 0 ? "sy-w" : ((k + j) % 3 === 1 ? "sy-a" : "sy-f"));
+        }
+      }
+    },
+    ledger: function (g) {
+      rect(g, 16, 52, 488, 30, 8, "sy-s"); rect(g, 16, 52, 488, 276, 8, "sy-o");
+      Ln(g, 300, 52, 300, 328); Ln(g, 402, 52, 402, 328);
+      rect(g, 26, 61, 80, 12, 6, "sy-f"); rect(g, 322, 61, 50, 12, 6, "sy-f"); rect(g, 424, 61, 50, 12, 6, "sy-f");
+      for (let r = 0; r < 6; r++) {
+        Ln(g, 16, 82 + 36 * r, 504, 82 + 36 * r);
+        rect(g, r % 2 ? 432 : 330, 95 + 36 * r, 60, 10, 5, "sy-f");
+        if (r > 3) rect(g, 24, 95 + 36 * r, 120, 10, 5, "sy-f");
+      }
+      Ln(g, 16, 298, 504, 298, "sy-l2");
+      rect(g, 322, 307, 68, 12, 6, "sy-a"); rect(g, 424, 307, 68, 12, 6, "sy-a");
+    }
+  };
+
+  ORDER.forEach(function (id) { SYS.at[id] = SYSC["home"][id]; SYS.it[id] = null; SYS.lab[id] = 1; });
+  function sysOf(id) { return SYSIDS.filter(function (s) { return SYSC.members[s].indexOf(id) >= 0; }); }
+  function slotOf(sys, id) { return SLOTS[SYSC.kinds[sys]][SYSC.members[sys].indexOf(id)]; }
+  function linkOf(a, b) {
+    return SYSC.links.filter(function (l) { return (l.a === a && l.b === b) || (l.a === b && l.b === a); })[0] || null;
+  }
+  function panelTarget(sys) {
+    const k = SYSIDS.indexOf(sys);
+    if (!SYS.focus) return { x: 150 + 550 * (k % 3), y: 140 + 380 * Math.floor(k / 3), s: 1 };
+    if (sys === SYS.focus) return { x: 150, y: 140, s: 730 / PH };
+    const r = SYSIDS.filter(function (s) { return s !== SYS.focus; }).indexOf(sys);
+    return { x: r % 2 ? 1530 : 1275, y: 140 + 181.5 * Math.floor(r / 2), s: 240 / PW };
+  }
+
+  const gSys = el("g", { "class": "sys-g" });
+  svg.insertBefore(gSys, gMap);
+  const panels = {}, echoes = {};
+  SYSIDS.forEach(function (sys, k) {
+    const g = el("g", { "class": "sysp" }, gSys);
+    rect(g, 0, 8, PW, PH, 14, "panel-shadow");
+    const fr = rect(g, 0, 0, PW, PH, 14, "sysp-frame");
+    fr.style.animationDelay = (-1.1 * k) + "s";
+    text(g, 18, 28, "t-sys", SYSC.names[sys]);
+    Ln(g, 0, 42, PW, 42);
+    DRAW[SYSC.kinds[sys]](g);
+    SYSC.members[sys].forEach(function (id) {
+      const sl = slotOf(sys, id);
+      const e = rect(g, sl.x, sl.y, sl.w, sl.h, 5, "echo");
+      e.setAttribute("data-id", id); e.setAttribute("data-sys", sys);
+      el("title", {}, e).textContent = CONTENT.items[id];
+      echoes[sys + ":" + id] = e;
+    });
+    rect(g, -6, -6, PW + 12, PH + 12, 18, "ring");
+    button(g, SYSC.names[sys]);
+    g.setAttribute("data-sys", sys);
+    panels[sys] = g; SYS.pc[sys] = panelTarget(sys); SYS.pt[sys] = null;
+    g.setAttribute("transform", "translate(" + SYS.pc[sys].x + " " + SYS.pc[sys].y + ") scale(1)");
+  });
+
+  const gSysT = el("g", { "class": "sys-tubes" });
+  svg.insertBefore(gSysT, gTubes);
+  const sysTubes = [];
+  ORDER.forEach(function (id) {
+    const ss = sysOf(id);
+    if (ss.length < 2) return;
+    ss.forEach(function (sys) {
+      const g = el("g", { "class": "stube" }, gSysT);
+      const p = ["w1", "w2", "w3"].map(function (c) { return el("path", { d: "M 0 0", "class": c }, g); });
+      const hd = el("g", { "class": "sys-head" }, g);
+      Ci(hd, 0, 0, 20, "ring"); Ci(hd, 0, 0, 13, "head-soft"); Ci(hd, 0, 0, 5.5, "head");
+      el("circle", { cx: 0, cy: 0, r: 24, fill: "transparent" }, hd);
+      button(hd, CONTENT.ui.rideTo + " " + SYSC.names[sys]);
+      hd.setAttribute("data-sys", sys);
+      hd.setAttribute("tabindex", "-1");
+      g.style.display = "none";
+      sysTubes.push({ id: id, sys: sys, g: g, p: p, hd: hd });
+    });
+  });
+
+  const sysGate = el("g", { "class": "gate sys-gate" }, svg);
+  Ci(sysGate, 0, 0, 26, "ring"); Ci(sysGate, 0, 0, 22, "pulse");
+  el("polygon", { points: "0,-15 15,0 0,15 -15,0", "class": "diamond" }, sysGate);
+  el("line", { x1: -6, y1: 0, x2: 6, y2: 0, "class": "bar" }, sysGate);
+  el("circle", { cx: 0, cy: 0, r: 30, fill: "transparent" }, sysGate);
+  button(sysGate, CONTENT.ui.approveSys);
+  sysGate.setAttribute("aria-pressed", "false");
+  sysGate.style.display = "none";
+
+  /* the second drop head on an open item (and on the map's centre): to the systems */
+  const rideS = el("g", { "class": "ride ride-sys" }, svg);
+  Ci(rideS, 78, 24, 22, "ring");
+  ["w1", "w2", "w3"].forEach(function (c) { el("path", { d: "M 0 0 C 30 0 50 24 78 24", "class": c }, rideS); });
+  const rideSHeads = el("g", { "class": "heads" }, rideS);
+  Ci(rideSHeads, 78, 24, 13, "head-soft breath"); Ci(rideSHeads, 78, 24, 5.5, "head");
+  text(rideS, 78, 58, "t-small t-ride", CONTENT.ui.rideSysWord);
+  el("rect", { x: -6, y: 4, width: 150, height: 62, fill: "transparent" }, rideS);
+  button(rideS, CONTENT.ui.rideSys);
+  rideS.style.display = "none";
+
+  function resolve(ref) {
+    if (!ref.sys) return ref;
+    const P = SYS.pc[ref.sys], sl = slotOf(ref.sys, ref.id), n = IT[ref.id];
+    return { cx: P.x + P.s * (sl.x + sl.w / 2), cy: P.y + P.s * (sl.y + sl.h / 2), w: P.s * sl.w, h: P.s * sl.h,
+             rx: P.s * 5, k: 1, lab: P.s >= 0.95 ? 1 : 0, lx: n.w / 2 - nodes[ref.id].tw / 2, ly: n.h / 2 + 5 };
+  }
+  function homeRef(id) {
+    const n = IT[id];
+    return { cx: n.cx, cy: n.cy, w: n.w, h: n.h, rx: TOKENS.radius, k: 0, lab: 1, lx: n.w / 2 + 12, ly: n.h + 32 };
+  }
+  function snapRef(id) {
+    const c = MAP.cur[id], n = IT[id];
+    return { cx: c.x + n.w / 2, cy: c.y + n.h / 2, w: c.w, h: c.h, rx: c.rx, k: c.m, lab: 1, lx: c.lx, ly: c.ly };
+  }
+  function bezLen(a, c1, c2, b) {
+    let l = 0, p = a;
+    for (let i = 1; i <= 16; i++) { const q = bez(a, c1, c2, b, i / 16); l += Math.sqrt((q[0] - p[0]) * (q[0] - p[0]) + (q[1] - p[1]) * (q[1] - p[1])); p = q; }
+    return l;
+  }
+
+  /* One frame of the systems view. Returns true while anything is still moving. */
+  function sysStep(now) {
+    let busy = false;
+    if (SYS.selT0 === null) SYS.selT0 = now;
+    if (SYS.approved && SYS.apT0 === null) SYS.apT0 = now;
+    if (SYS.tunnel) {
+      const T = SYS.tunnel; let any = false;
+      if (T.start === null) T.start = now;
+      rings.forEach(function (c, i) {
+        const u = clamp01((now - T.start - i * 95) / 900);
+        c.setAttribute("cx", T.o[0]); c.setAttribute("cy", T.o[1]);
+        c.setAttribute("r", 20 + 1500 * u * u);
+        c.setAttribute("stroke-width", 6 + 60 * u);
+        c.setAttribute("opacity", u > 0 && u < 1 ? 0.34 * (1 - u) : 0);
+        if (u < 1) any = true;
+      });
+      if (any) busy = true; else { SYS.tunnel = null; hideRings(); }
+    }
+    SYSIDS.forEach(function (sys) {
+      const w = SYS.pt[sys];
+      if (w) {
+        if (w.t0 === null) w.t0 = now;
+        const u = reduce ? 1 : clamp01((now - w.t0) / w.dur), e = ease(u);
+        SYS.pc[sys] = { x: lerp(w.f.x, w.t.x, e), y: lerp(w.f.y, w.t.y, e), s: lerp(w.f.s, w.t.s, e) };
+        if (u >= 1) SYS.pt[sys] = null; else busy = true;
+      }
+      const P = SYS.pc[sys];
+      panels[sys].setAttribute("transform", "translate(" + P.x + " " + P.y + ") scale(" + P.s + ")");
+    });
+    ORDER.forEach(function (id) {
+      const w = SYS.it[id];
+      if (!w) return;
+      if (w.t0 === null) w.t0 = now + w.delay;
+      const u = reduce ? 1 : clamp01((now - w.t0) / w.dur), e = ease(u);
+      const A = resolve(w.from), B = resolve(w.to), n = IT[id];
+      let lab = SYS.lab[id];
+      lab = reduce ? B.lab : lab + (B.lab - lab) * 0.18;
+      if (Math.abs(B.lab - lab) < 0.01) lab = B.lab; else busy = true;
+      SYS.lab[id] = lab;
+      applyItem(id, lerp(A.cx, B.cx, e) - n.w / 2, lerp(A.cy, B.cy, e) - n.h / 2, lerp(A.k, B.k, e), 0,
+        { w: lerp(A.w, B.w, e), h: lerp(A.h, B.h, e), rx: lerp(A.rx, B.rx, e), memb: 0, lab: lab,
+          lx: lerp(A.lx, B.lx, e), ly: lerp(A.ly, B.ly, e) });
+      if (u >= 1) w.from = w.to; else busy = true;
+    });
+    let gateOn = false, hotK = 0;
+    sysTubes.forEach(function (t) {
+      const vis = S.sys && SYS.at[t.id] !== t.sys;
+      t.g.style.display = vis ? "" : "none";
+      if (!vis) { t.hd.setAttribute("tabindex", "-1"); return; }
+      const A = centreOf(t.id), R = resolve({ sys: t.sys, id: t.id }), B = [R.cx, R.cy];
+      const dx = B[0] - A[0], dy = B[1] - A[1], d = Math.sqrt(dx * dx + dy * dy) || 1;
+      let nx = -dy / d, ny = dx / d;
+      if (ny > 0) { nx = -nx; ny = -ny; }
+      const bow = Math.min(110, 0.18 * d);
+      const C1 = [A[0] + dx * 0.3 + nx * bow, A[1] + dy * 0.3 + ny * bow];
+      const C2 = [A[0] + dx * 0.7 + nx * bow, A[1] + dy * 0.7 + ny * bow];
+      const dStr = "M " + A[0] + " " + A[1] + " C " + C1[0] + " " + C1[1] + " " + C2[0] + " " + C2[1] + " " + B[0] + " " + B[1];
+      t.p.forEach(function (p) { p.setAttribute("d", dStr); });
+      const hot = S.sel === t.id;
+      t.g.classList.toggle("is-hot", hot);
+      if (!hot) {
+        t.p.forEach(function (p) { p.removeAttribute("stroke-dasharray"); });
+        t.hd.style.display = "none"; t.hd.classList.remove("is-ready"); t.hd.setAttribute("tabindex", "-1");
+        return;
+      }
+      const lk = linkOf(SYS.at[t.id], t.sys), isG = !!(lk && lk.gated);
+      let g;
+      if (reduce) g = isG && !SYS.approved ? 0.5 : 1;
+      else {
+        const g1 = ease(clamp01((now - SYS.selT0 - hotK * 140) / 900));
+        if (!isG) g = g1;
+        else if (!SYS.approved) g = 0.5 * g1;
+        else g = Math.max(0.5 * g1, 0.5 + 0.5 * ease(clamp01((now - SYS.apT0) / 600)));
+      }
+      const full = isG && !SYS.approved ? 0.5 : 1;
+      if (g < full - 0.001) busy = true;
+      const len = bezLen(A, C1, C2, B);
+      t.p.forEach(function (p) { p.setAttribute("stroke-dasharray", (len * g) + " " + (len + 20)); });
+      const H = bez(A, C1, C2, B, g);
+      t.hd.setAttribute("transform", "translate(" + H[0] + " " + H[1] + ")");
+      t.hd.style.display = g > 0.02 ? "" : "none";
+      const ready = g >= 0.999;
+      t.hd.classList.toggle("is-ready", ready);
+      t.hd.setAttribute("tabindex", ready ? "0" : "-1");
+      if (isG) {
+        const G = bez(A, C1, C2, B, 0.5);
+        sysGate.setAttribute("transform", "translate(" + G[0] + " " + G[1] + ")");
+        sysGate.classList.toggle("is-waiting", !SYS.approved && g >= 0.499);
+        sysGate.classList.toggle("is-approved", SYS.approved);
+        sysGate.setAttribute("aria-pressed", SYS.approved ? "true" : "false");
+        gateOn = true;
+      }
+      hotK++;
+    });
+    sysGate.style.display = gateOn ? "" : "none";
+    sysGate.setAttribute("tabindex", gateOn ? "0" : "-1");
+    if (!busy && SYS.onDone) { const f = SYS.onDone; SYS.onDone = null; f(); }
+    return busy;
+  }
+  function sysLoop(now) {
+    SYS.raf = 0; MAP.lastNow = now;
+    if (!SYS.active) return;
+    if (sysStep(now)) SYS.raf = requestAnimationFrame(sysLoop);
+    updateText();
+  }
+  function sysKick() {
+    if (!SYS.active) return;
+    if (reduce) { sysStep(MAP.lastNow); sysStep(MAP.lastNow); updateText(); return; }
+    if (!SYS.raf) SYS.raf = requestAnimationFrame(sysLoop);
+  }
+  function retargetPanels() {
+    SYSIDS.forEach(function (sys) {
+      const t = panelTarget(sys), c = SYS.pc[sys];
+      if (c.x !== t.x || c.y !== t.y || c.s !== t.s) SYS.pt[sys] = { f: c, t: t, t0: null, dur: 650 };
+      panels[sys].classList.toggle("is-focus", sys === SYS.focus);
+      panels[sys].classList.toggle("is-rail", !!SYS.focus && sys !== SYS.focus);
+    });
+  }
+  function echoSync() {
+    for (const key in echoes) {
+      const q = key.split(":");
+      echoes[key].classList.toggle("is-off", SYS.at[q[1]] === q[0]);
+    }
+  }
+  function moveItem(id, sys) {
+    if (SYS.at[id] === sys) return;
+    SYS.at[id] = sys;
+    SYS.it[id] = { from: snapRef(id), to: { sys: sys, id: id }, t0: null, delay: 0, dur: 650 };
+  }
+  /* Bring one system forward (or none: the calm 3 by 2 grid). Its items become real there. */
+  function setFocus(sys, sel) {
+    SYS.focus = sys; SYS.approved = false; SYS.selT0 = null; SYS.apT0 = null;
+    if (sys) SYSC.members[sys].forEach(function (id) { moveItem(id, sys); });
+    S.sel = sel || null;
+    retargetPanels(); echoSync(); render(); sysKick();
+  }
+  function selectSys(id) {
+    S.sel = S.sel === id ? null : id;
+    SYS.approved = false; SYS.selT0 = null; SYS.apT0 = null;
+    render(); sysKick();
+  }
+  function approveSys() {
+    if (!S.sys || SYS.approved || !S.sel) return;
+    SYS.approved = true; SYS.apT0 = null;
+    render(); sysKick();
+  }
+  /* Ride the open item's link into another system: tunnel, then that system comes forward. */
+  function rideSys(sys) {
+    const id = S.sel;
+    if (!S.sys || !id || SYS.at[id] === sys || sysOf(id).indexOf(sys) < 0) return;
+    const lk = linkOf(SYS.at[id], sys);
+    if (lk && lk.gated && !SYS.approved) return;
+    if (reduce) { setFocus(sys, id); return; }
+    const R = resolve({ sys: sys, id: id });
+    SYS.tunnel = { start: null, o: [R.cx, R.cy] };
+    sysKick();
+    later(function () { if (S.sys) setFocus(sys, id); }, 350);
+  }
+  function enterSys(tunnelAt) {
+    clearTimers();
+    if (S.map) {
+      S.map = false; svg.classList.remove("map-on"); mapGate.style.display = "none";
+      LINKS.forEach(function (lk) { lk.pulse.style.display = "none"; });
+      ORDER.forEach(function (o) { MAP.tw[o] = null; });
+      MAP.onDone = null;
+    } else if (MAP.active) rideBack(true);
+    if (!MAP.active) {
+      S.tag = null; S.approved = false; S.filter = false; S.layerFocus = -1;
+      MAP.active = true;
+      ORDER.forEach(function (o) { MAP.tw[o] = null; applyItem(o, IT[o].x, IT[o].y, 0, nodeR(o)); });
+    }
+    MAP.riding = false; MAP.tunnel = null; hideRings(); ride.classList.remove("is-go");
+    S.sys = true; SYS.active = true; SYS.focus = null; SYS.approved = false; SYS.onDone = null;
+    SYS.selT0 = null; SYS.apT0 = null;
+    SYSIDS.forEach(function (sys) { SYS.pt[sys] = null; SYS.pc[sys] = panelTarget(sys); });
+    ORDER.forEach(function (id, k) {
+      SYS.it[id] = { from: snapRef(id), to: { sys: SYS.at[id], id: id }, t0: null, delay: k * 30, dur: 800 };
+    });
+    retargetPanels(); echoSync();
+    svg.classList.add("mode-map"); svg.classList.add("mode-sys");
+    placeStops(true);
+    if (reduce) crossFade(); else if (tunnelAt) SYS.tunnel = { start: null, o: tunnelAt };
+  }
+  /* Back to the tree: every item returns to its home. snap = no animation. */
+  function sysExit(snap) {
+    clearTimers();
+    S.sys = false; SYS.tunnel = null; hideRings(); SYS.onDone = null; SYS.focus = null;
+    svg.classList.remove("mode-sys");
+    sysGate.style.display = "none";
+    sysTubes.forEach(function (t) { t.g.style.display = "none"; });
+    placeStops(false);
+    if (S.stop >= 7) S.stop = 3;
+    function done() {
+      SYS.active = false; MAP.active = false;
+      ORDER.forEach(function (o) { SYS.it[o] = null; MAP.tw[o] = null; applyItem(o, IT[o].x, IT[o].y, 0, nodeR(o)); });
+      svg.classList.remove("mode-map");
+      render();
+    }
+    if (snap || reduce) { done(); return; }
+    svg.classList.remove("mode-map");
+    ORDER.forEach(function (o, k) { SYS.it[o] = { from: snapRef(o), to: homeRef(o), t0: null, delay: k * 25, dur: 800 }; });
+    SYS.onDone = done;
+    render(); sysKick();
+  }
+  function sysToMap(id) {
+    clearTimers();
+    S.sys = false; SYS.active = false; SYS.tunnel = null; hideRings(); SYS.onDone = null; SYS.focus = null;
+    svg.classList.remove("mode-sys");
+    sysGate.style.display = "none";
+    sysTubes.forEach(function (t) { t.g.style.display = "none"; });
+    ORDER.forEach(function (o) { SYS.it[o] = null; });
+    S.center = id; S.stop = 7;
+    landInMap(reduce);
+  }
+  /* Step back one level: open item, then the forward system, then the tree. */
+  function sysBack() {
+    if (S.sel) { S.sel = null; SYS.approved = false; render(); sysKick(); }
+    else if (SYS.focus) setFocus(null, null);
+    else sysExit(false);
+  }
+  /* From an open item in the tree, or from the map's centre item. */
+  function goSysFrom() {
+    const id = S.map ? S.center : S.sel;
+    let o = null;
+    if (!S.map && id) { const n = IT[id]; o = [n.x + n.w + 78, n.cy + 24]; }
+    enterSys(o);
+    S.stop = 8; S.sel = id || null;
+    render(); sysKick();
+  }
+  function sysStop(n) {
+    if (!S.sys) enterSys(MAP.active ? null : [L.W / 2, L.H / 2]); else clearTimers();
+    S.stop = n;
+    if (n === 8) { setFocus(null, null); return; }
+    const d = SYSC.demo;
+    setFocus(d.from, d.item);
+    later(approveSys, reduce ? 1200 : 2600);
+    later(function () { rideSys(d.to); }, reduce ? 2400 : 4400);
+  }
+
+  /* ---- the three interactions ---------------------------------------------- */
+  function openItem(id) {
+    if (MAP.active) return;
+    clearTimers();
+    S.layerFocus = -1;
+    S.sel = S.sel === id ? null : id;
+    render();
+  }
+  function closeItem() {
+    if (!S.sel) return;
+    S.sel = null;
+    render();
+  }
+  function pickTag(tag) {
+    if (MAP.active) rideBack(true);
+    clearTimers();
+    S.layerFocus = -1;
+    S.sel = null;
+    if (S.tag === tag && !S.filter) { S.tag = null; S.approved = false; }
+    else { S.tag = tag; S.approved = false; S.filter = false; if (shownTag === tag) holdAtGate(); }
+    render();
+  }
+  function approve() {
+    if (!S.tag || S.approved) return;
+    clearTimers();
+    S.approved = true;
+    render();
+  }
+  function goStop(n) {
+    n = Math.max(1, Math.min(L.stops.length, n));
+    if (n === 7) {
+      if (S.sys) sysToMap(S.sel || L.demoItem);
+      else if (!MAP.active) rideIn(S.sel && !S.tag ? S.sel : L.demoItem);
+      return;
+    }
+    if (n >= 8) { sysStop(n); return; }
+    if (MAP.active) rideBack(true);
+    clearTimers();
+    S.stop = n; S.sel = null; S.filter = false; S.layerFocus = -1;
+    if (n === 1) { S.tag = null; S.approved = false; }
+    else if (n === 2) {
+      S.tag = null; S.approved = false;
+      if (!reduce) {
+        const seq = [0, 1, 2, -1];
+        S.layerFocus = 0;
+        seq.slice(1).forEach(function (v, k) {
+          later(function () { S.layerFocus = v; render(); }, 1500 * (k + 1));
+        });
+      }
+    }
+    else if (n === 3) { S.tag = null; S.approved = false; S.sel = L.demoItem; }
+    else if (n === 4 || n === 5) {
+      const same = S.tag === L.demoTag;
+      S.tag = L.demoTag; S.approved = false;
+      if (same && shownTag === L.demoTag) holdAtGate();
+      if (n === 5) later(function () { approve(); }, reduce ? 1200 : 3200);
+    }
+    else if (n === 6) { S.tag = L.demoTag; S.approved = true; S.filter = true; }
+    render();
+  }
+
+  /* ---- events -------------------------------------------------------------- */
+  function act(target) {
+    if (target.closest(".ride-sys")) { goSysFrom(); return true; }
+    if (S.sys) {
+      const hd = target.closest(".sys-head");
+      if (hd) { rideSys(hd.getAttribute("data-sys")); return true; }
+      if (target.closest(".sys-gate")) { approveSys(); return true; }
+      const st = target.closest(".stop");
+      if (st) { goStop(parseInt(st.getAttribute("data-stop"), 10)); return true; }
+      const lg = target.closest(".legend");
+      if (lg) { pickTag(lg.getAttribute("data-tag")); return true; }
+      const ec = target.closest(".echo");
+      if (ec) { setFocus(ec.getAttribute("data-sys"), ec.getAttribute("data-id")); return true; }
+      const it = target.closest(".item");
+      if (it) {
+        const id = it.getAttribute("data-id");
+        if (SYS.focus === SYS.at[id]) selectSys(id); else setFocus(SYS.at[id], id);
+        return true;
+      }
+      const pn = target.closest(".sysp");
+      if (pn) {
+        const sy = pn.getAttribute("data-sys");
+        if (SYS.focus === sy) { if (S.sel) selectSys(S.sel); } else setFocus(sy, null);
+        return true;
+      }
+      return false;
+    }
+    if (target.closest(".ride")) { rideIn(S.sel); return true; }
+    if (target.closest(".map-gate")) { approveMap(); return true; }
+    const chip = target.closest(".chip-hit, .legend");
+    if (chip) { pickTag(chip.getAttribute("data-tag")); return true; }
+    if (target.closest(".gate")) { approve(); return true; }
+    const stop = target.closest(".stop");
+    if (stop) { goStop(parseInt(stop.getAttribute("data-stop"), 10)); return true; }
+    const item = target.closest(".item");
+    if (item) {
+      if (S.map) recentre(item.getAttribute("data-id")); else openItem(item.getAttribute("data-id"));
+      return true;
+    }
+    return false;
+  }
+  svg.addEventListener("click", function (e) {
+    if (!act(e.target)) { if (S.sys) sysBack(); else if (MAP.active) rideBack(false); else closeItem(); }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const focused = document.activeElement && document.activeElement.closest
+      ? document.activeElement.closest(".item, .legend, .stop, .gate, .ride, .sys-head, .sysp") : null;
+    if ((e.key === "Enter" || e.key === " ") && focused) { e.preventDefault(); act(focused); return; }
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); if (S.stop < L.stops.length) goStop(S.stop + 1); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); goStop(S.stop - 1); }
+    else if (e.key === "Escape") {
+      if (S.sys) { sysBack(); return; }
+      if (MAP.active) { rideBack(false); return; }
+      clearTimers(); S.sel = null; S.tag = null; S.approved = false; S.filter = false; S.layerFocus = -1; render();
+    }
+    else if (e.key === "j" || e.key === "J" || e.key === "Enter") {
+      e.preventDefault();
+      if (MAP.active) rideBack(false);
+      else if (e.key !== "Enter" || S.sel) rideIn(S.sel && !S.tag ? S.sel : L.demoItem);
+    }
+    else if (e.key === "d" || e.key === "D") { flipTheme(); }
+    else if (e.key === "t" || e.key === "T") { flipSkin(); }
+    else if (/^[1-9]$/.test(e.key)) { goStop(parseInt(e.key, 10)); }
+  });
+
+  goStop(1);
+})();
+</script>
+</body>
+</html>

@@ -16,19 +16,22 @@ Each publish runs these gates, in this order, before a human reads the full diff
    secret scanner installed;
 2. **G1 allowlist integrity** — one file per row (a file nobody listed cannot ship) over an inverted universe
    where every folder is denied unless named; the allowlist's own hash is recorded;
-3. **G2 shape** — extension whitelist, size cap, text mime, UTF-8, no CR/NUL, shebangs on scripts,
-   byte-compiled Python;
+3. **G2 shape** — extension whitelist, size cap, text mime (a `.html` must be detected as HTML and a `.svg`
+   as SVG, each exactly; no other non-text type passes), UTF-8, no CR/NUL, shebangs on scripts, byte-compiled
+   Python;
 4. **G3 placeholder rewrite** — ordered, with a per-row contract (`copy` rows must score zero hits, `scrub`
    rows at least one, `patch` rows apply with `patch -F0`), plus hard-fail classes that no rewrite may touch
    (push tokens, webhook ids, auth keys, private-key headers);
 5. **G8 rule self-tests** — every rewrite rule matches its own sample, and a planted file of samples is
    caught line for line;
-6. **G4 secret scan** — gitleaks over the staged tree with the config in `tools/gitleaks.toml`;
+6. **G4 secret scan** — gitleaks over the staged tree with the config in `tools/gitleaks.toml`; every `.html`
+   and `.svg` is also fed to `gitleaks stdin` file by file, because the scanner's directory mode skips `*.svg`
+   by its default path allowlist;
 7. **G5 crossing lint** — `tools/crossing-lint.sh` with the public shape rules in `tools/gate-generic.rules`
    plus an off-repo list of identity literals that never leaves the private side;
 8. **G6 placeholder set** — no placeholder outside the documented set survives in the tree;
 9. **G7 instruction-surface scan** — hidden Unicode, external beacons, base64 blobs, instruction-override
-   lexicon: a public repository is text other people paste into their own agents, so it is scanned as such.
+   lexicon; a `.html` or `.svg` may carry no network reference at all (only XML namespace identifiers pass): a public repository is text other people paste into their own agents, so it is scanned as such.
 
 Commits are authored by a GitHub noreply address at UTC day precision, carry no trailers, and the pre-push
 hook re-scans the whole public history. No script on either side can change this repository's visibility.

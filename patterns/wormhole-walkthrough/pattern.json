@@ -1,0 +1,25 @@
+{
+  "id": "wormhole-walkthrough",
+  "name": "Wormhole walkthrough (one set of items, four views)",
+  "summary": "a self-contained presentation page and a set of text-free still plates that show the same twelve items as a layered folder tree, as tag links with an approval gate, as a relationship map and inside six generic system panels, with animated jumps between the views and all wording held in one data block",
+  "status": "stable",
+  "version": "1.0.0",
+  "files": [
+    "patterns/wormhole-walkthrough/files/walkthrough.html",
+    "patterns/wormhole-walkthrough/files/plates/plate-1-overview.svg",
+    "patterns/wormhole-walkthrough/files/plates/plate-2-drilldown.svg",
+    "patterns/wormhole-walkthrough/files/plates/plate-3-wormhole.svg",
+    "patterns/wormhole-walkthrough/files/plates/plate-4-filter.svg",
+    "patterns/wormhole-walkthrough/files/plates/plate-5-components.svg",
+    "patterns/wormhole-walkthrough/files/plates/plate-6-overview-dark.svg",
+    "patterns/wormhole-walkthrough/files/tokens.json",
+    "patterns/wormhole-walkthrough/files/slots.json",
+    "patterns/wormhole-walkthrough/files/build_plates.py",
+    "patterns/wormhole-walkthrough/files/image-plate-recipe/prompts.md"
+  ],
+  "requires": [
+    "a modern browser",
+    "python3 ≥ 3.9 only to redraw the static plates"
+  ],
+  "retires": "the separate filing diagram, connection diagram and systems diagram, and redrawing them for each audience"
+}
